@@ -1,56 +1,56 @@
-# 🧬 10 Benefícios de Usar a TAC Language na TacFlow
+# 🧬 10 Benefits of Using the TAC Language on TacFlow
 
 > *"TAC is not a language for writing code. It is a language for thinking like an agent."*
 
 ---
 
-## 1. 🎯 DSL Unificada — Uma Linguagem, Todos os Agentes
+## 1. 🎯 Unified DSL — One Language, All Agents
 
-**Antes:** Cada agente inventa seu próprio formato de instrução. Prompt engineering ad-hoc, inconsistente, difícil de versionar.
+**Before:** Each agent invents its own instruction format. Ad-hoc prompt engineering, inconsistent, hard to version.
 
-**Com TAC:** Todos os agentes falam a mesma gramática — mesma sintaxe, mesmo AST, mesmo pipeline de compilação.
+**With TAC:** All agents speak the same grammar — same syntax, same AST, same compilation pipeline.
 
-| Antes | Depois |
-|-------|--------|
-| Instrução em linguagem natural solta | Programa TAC estruturado e validável |
-| Cada agente interpreta do seu jeito | AST único, execução determinística |
-| Sem rastreabilidade | Hash do AST → execução auditável |
+| Before | After |
+|--------|-------|
+| Untamed natural language instructions | Structured, validatable TAC program |
+| Each agent interprets its own way | Single AST, deterministic execution |
+| No traceability | AST hash → auditable execution |
 
-**Ganho:** A plataforma ganha uma **camada de abstração** entre a intenção do usuário e a execução. O parser é o **gateway único** — qualquer erro é capturado antes de gastar tokens.
+**Gain:** The platform gains an **abstraction layer** between user intent and execution. The parser is the **single gateway** — every error is caught before spending tokens.
 
 ---
 
-## 2. 🔍 Auditoria e Rastreabilidade Totais
+## 2. 🔍 Total Auditability and Traceability
 
-Cada programa TAC gera uma trilha completa:
+Every TAC program generates a complete trail:
 
 ```
 .tac source → AST JSON → Flow JSON → Execution Log → Training Record
 ```
 
-- ✅ Todo passo tem **hash do AST** → podemos provar exatamente o que foi executado
-- ✅ O Training Record captura **intenção do usuário + contexto recuperado + raciocínio + saída**
-- ✅ Ideal para **compliance** (LGPD, GDPR, SOC2)
+- ✅ Every step has an **AST hash** — we can prove exactly what was executed
+- ✅ The Training Record captures **user intent + retrieved context + reasoning + output**
+- ✅ Ideal for **compliance** (LGPD, GDPR, SOC2)
 
-**Ganho:** TacFlow se diferencia como plataforma **auditável por design** — essencial para clientes enterprise e setores regulados.
+**Gain:** TacFlow differentiates itself as an **auditable-by-design** platform — essential for enterprise clients and regulated industries.
 
 ---
 
-## 3. 🏋️ Geração Automática de Dados de Treinamento (LoRA / QLoRA)
+## 3. 🏋️ Automatic Training Data Generation (LoRA / QLoRA)
 
-Cada execução TAC produz automaticamente um structured training record:
+Every TAC execution automatically produces a structured training record:
 
 ```yaml
 record:
   id: "tac_train_001"
-  input: "Crie uma linguagem de programação"
+  input: "Create a programming language"
   context:
     - source: "memory_001"
       score: 0.92
       retrieval_path: "bm25 → vector → graph"
   reasoning:
     - step: 1
-      thought: "Preciso modelar como agentes realmente trabalham"
+      thought: "I need to model how agents actually work"
       tool_calls: ["memory_search"]
   output: "TAC — The TacFlow Agentic Code..."
   metrics:
@@ -58,55 +58,55 @@ record:
     retrieval_relevance: 0.91
 ```
 
-**Ganho:** Fine-tuning de SLMs **não precisa mais de datasets artificiais**. Cada interação real do usuário vira dado de treinamento. O modelo melhora **continuamente** com uso real.
+**Gain:** Fine-tuning SLMs **no longer needs artificial datasets**. Every real user interaction becomes training data. The model improves **continuously** from real usage.
 
 ```
-Ciclo virtuoso: Usar → Registrar → Treinar → Melhorar → (repete)
+Virtuous cycle: Use → Record → Train → Improve → (repeat)
 ```
 
 ---
 
-## 4. 🔄 Portabilidade entre Agentes e Swarms
+## 4. 🔄 Portability Across Agents and Swarms
 
 ```
-Agente A (Python) ←→ TAC AST JSON ←→ Agente B (Go)
-                             ↕
-                   Outro Swarm via Hermes
+Agent A (Python) ←→ TAC AST JSON ←→ Agent B (Go)
+                            ↕
+                   Another Swarm via Hermes
 ```
 
-- TAC é **agnóstico de linguagem de implementação**
-- Um agente exporta seu plano como TAC, outro importa e executa
-- Mensagens entre swarms (protocolo Hermes) carregam sub-árvores TAC
+- TAC is **agnostic to implementation language**
+- One agent exports its plan as TAC, another imports and executes it
+- Cross-swarm messages (Hermes protocol) carry TAC sub-trees
 
-**Ganho:** TAC vira a **língua franca** entre agentes de diferentes tecnologias, provedores e swarms. Interoperabilidade **nativa**.
+**Gain:** TAC becomes the **lingua franca** among agents of different technologies, providers, and swarms. **Native** interoperability.
 
 ---
 
-## 5. 🚦 Compilação com Type Safety (Trust Types)
+## 5. 🚦 Compile-Time Type Safety (Trust Types)
 
-O parser TAC valida em **compile time** usando tipos de confiança:
+The TAC parser validates at **compile time** using trust types:
 
 ```tac
-let api_key: Secret = config_get("provider.api_key")     // ✅ OK
-let user_msg: Untrusted = get_input()                     // ✅ OK
-let answer: Hallucinable = llm.chat(prompt)               // ✅ OK
-let verified: Fact = verify(answer, source: "web_search") // ⚠️ Exige conversão explícita
+let api_key: Secret = config_get("provider.api_key")        // ✅ OK
+let user_msg: Untrusted = get_input()                        // ✅ OK
+let answer: Hallucinable = llm.chat(prompt)                  // ✅ OK
+let verified: Fact = verify(answer, source: "web_search")    // ⚠️ Requires explicit conversion
 ```
 
-| Tipo | O que previne |
-|------|---------------|
-| `Secret` | Vazamento de credentials para o chat |
-| `Untrusted → Fact` | Exige `verify()` — dados não validados não entram no conhecimento |
-| `Hallucinable → Fact` | Exige `verify()` — alucinações não viram verdade |
-| `Control` | Estado interno do runtime, read-only para agentes |
+| Type | What it prevents |
+|------|------------------|
+| `Secret` | Credential leakage to chat |
+| `Untrusted → Fact` | Requires `verify()` — unvalidated data never enters the knowledge base |
+| `Hallucinable → Fact` | Requires `verify()` — hallucinations never become truth |
+| `Control` | Runtime internal state, read-only for agents |
 
-**Ganho:** **Shift-left de segurança** — erros de tipo e vazamento de dados são detectados no parser, não durante a execução com o usuário.
+**Gain:** **Shift-left security** — type errors and data leaks are caught in the parser, not during execution with the user.
 
 ---
 
-## 6. ⚡ Otimização de Execução com Pipeline DAG
+## 6. ⚡ Execution Optimization with DAG Pipeline
 
-O parser TAC entrega o **grafo de dependências explícito**:
+The TAC parser delivers the **explicit dependency graph**:
 
 ```json
 {
@@ -117,25 +117,25 @@ O parser TAC entrega o **grafo de dependências explícito**:
 }
 ```
 
-Com isso, o runtime pode:
+With this, the runtime can:
 
-- ⚡ Executar nodes **independentes em paralelo** automaticamente
-- 📐 Calcular o **caminho crítico** e alocar recursos de acordo
-- ✂️ **Poda de branches** que não serão executados (economia de tokens)
+- ⚡ Execute **independent nodes in parallel** automatically
+- 📐 Compute the **critical path** and allocate resources accordingly
+- ✂️ **Prune branches** that won't execute (token savings)
 
-**Ganho:** Redução de **TTFT (Time to First Token)** e **custo de inferência**. A plataforma sabe exatamente o que executar e em que ordem **antes de começar**.
+**Gain:** Reduction in **TTFT (Time to First Token)** and **inference cost**. The platform knows exactly what to execute and in what order **before starting**.
 
 ---
 
-## 7. 🧠 Memória Estruturada para RAG (3 Camadas)
+## 7. 🧠 Structured Memory for RAG (3 Layers)
 
-O TAC modela memória em **3 camadas**, consultadas simultaneamente:
+TAC models memory in **3 layers**, queried simultaneously:
 
-| Camada | Índice | Força | Score |
-|--------|--------|-------|:-----:|
-| 🔑 **BM25** | Termos-chave (sparse) | Match exato de keywords | 30% |
-| 🧬 **Vector** | Embeddings 768d (dense) | Similaridade semântica | 40% |
-| 🕸️ **Graph** | SQLite + arestas | Descoberta de conexões indiretas | 30% |
+| Layer | Index | Strength | Score |
+|-------|-------|----------|:-----:|
+| 🔑 **BM25** | Keywords (sparse) | Exact keyword match | 30% |
+| 🧬 **Vector** | 768d embeddings (dense) | Semantic similarity | 40% |
+| 🕸️ **Graph** | SQLite + edges | Indirect connection discovery | 30% |
 
 ```tac
 results <- search_hybrid("TAC execution model") {
@@ -147,13 +147,13 @@ results <- search_hybrid("TAC execution model") {
 }
 ```
 
-**Ganho:** Cada programa TAC alimenta automaticamente as 3 camadas. A qualidade do RAG melhora **organicamente** com cada execução.
+**Gain:** Every TAC program automatically feeds all 3 layers. RAG quality improves **organically** with each execution.
 
 ---
 
-## 8. 🔌 Marketplace de Skills — Ecossistema de Agentes
+## 8. 🔌 Skill Marketplace — Agent Ecosystem
 
-Com TAC, skills podem ser **empacotadas, versionadas e compartilhadas**:
+With TAC, skills can be **packaged, versioned, and shared**:
 
 ```tac
 skill web_qa(question: Untrusted) -> Fact {
@@ -164,103 +164,103 @@ skill web_qa(question: Untrusted) -> Fact {
   }
 }
 
-// Publicada no marketplace
+// Published in the marketplace
 import skill web_qa from "tacflow/marketplace@v1.2.0"
 ```
 
-| Recurso | Benefício |
-|---------|-----------|
-| Skills versionadas (`@v1.2.0`) | Compatibilidade garantida |
-| AST + docs + training data embutidos | Transparência total |
-| Import via namespace | Descoberta e reuso |
+| Feature | Benefit |
+|---------|---------|
+| Versioned skills (`@v1.2.0`) | Guaranteed compatibility |
+| AST + docs + training data embedded | Full transparency |
+| Namespace-based import | Discoverability and reuse |
 
-**Ganho:** Cria um **ecossistema de skills** que transforma a TacFlow em uma **App Store de agentes** → efeito de rede, retenção de usuários, receita recorrente.
+**Gain:** Creates a **skill ecosystem** that turns TacFlow into an **App Store for agents** → network effect, user retention, recurring revenue.
 
 ---
 
-## 9. 🧪 Simulação Pré-Execução — Teste Antes de Gastar
+## 9. 🧪 Pre-Execution Simulation — Test Before You Spend
 
 ```
 TAC Source → Parser → AST → Flow JSON
                               ↓
                     🧪 Sandbox Environment
-                    (sem chamadas reais de API)
+                    (no real API calls)
                               ↓
-                    Custo estimado em tokens
+                    Estimated token cost
                               ↓
-                    ✅ Aprovação → Execução real
+                    ✅ Approval → Real execution
 ```
 
 ```tac
-// Simular antes de executar
-$ tac-parser meu_flow.tac --simulate
+// Simulate before executing
+$ tac-parser my_flow.tac --simulate
 ┌──────────────────────────────┐
-│ ⏱ Steps: 8 (4 em paralelo)  │
-│ 💰 Tokens estimados: 2,450   │
-│ 📊 Custo: ~$0.049            │
-│ ⚠️ Riscos: 1 (confidence < 0.8) │
+│ ⏱ Steps: 8 (4 in parallel)  │
+│ 💰 Estimated tokens: 2,450   │
+│ 📊 Estimated cost: ~$0.049   │
+│ ⚠️ Risks: 1 (confidence < 0.8) │
 └──────────────────────────────┘
 ```
 
-**Ganho:** Usuários podem **simular** qualquer flow TAC antes de pagar por ele. A plataforma mostra o custo estimado **antes da execução real**. Reduz atrito de adoção e elimina surpresas na fatura.
+**Gain:** Users can **simulate** any TAC flow before paying for it. The platform shows the estimated cost **before real execution**. Reduces adoption friction and eliminates billing surprises.
 
 ---
 
-## 10. 🏆 Diferencial Competitivo — Um Fosso Real
+## 10. 🏆 Competitive Moat — A Real Differentiator
 
-| Concorrente | DSL Própria | Training Data Automático | Portável entre Agentes | Compile-time Safety | Memória 3 Camadas |
-|-------------|:-----------:|:------------------------:|:----------------------:|:-------------------:|:------------------:|
+| Competitor | Own DSL | Auto Training Data | Agent-Portable | Compile-time Safety | 3-Layer Memory |
+|------------|:-------:|:------------------:|:--------------:|:-------------------:|:--------------:|
 | **OpenAI (GPTs)** | ❌ | ❌ | ❌ | ❌ | ❌ |
 | **Anthropic (MCP)** | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **LangChain** | ❌ (código Python) | ❌ | ❌ | ❌ | ❌ |
-| **AutoGen** | ❌ (código Python) | ❌ | ⚠️ limitado | ❌ | ❌ |
+| **LangChain** | ❌ (Python code) | ❌ | ❌ | ❌ | ❌ |
+| **AutoGen** | ❌ (Python code) | ❌ | ⚠️ limited | ❌ | ❌ |
 | **CrewAI** | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Dify** | ❌ (arrasta e solta) | ❌ | ❌ | ❌ | ❌ |
-| **TacFlow + TAC** | ✅ **nativa** | ✅ **automática** | ✅ **nativa** | ✅ **Trust Types** | ✅ **BM25+Vec+Graph** |
+| **Dify** | ❌ (drag & drop) | ❌ | ❌ | ❌ | ❌ |
+| **TacFlow + TAC** | ✅ **native** | ✅ **automatic** | ✅ **native** | ✅ **Trust Types** | ✅ **BM25+Vec+Graph** |
 
-**Ganho:** TAC é um **moat** (fosso competitivo) real. **Nenhum** concorrente no mercado atual oferece uma DSL de agente com:
+**Gain:** TAC is a genuine **moat** — **none** of the current competitors offer an agent DSL with:
 
-- Compilação com type safety
-- Geração automática de dados de treinamento
-- Portabilidade entre swarms
-- Memória híbrida 3 camadas
-- Marketplace de skills versionadas
-- Simulação pré-execução
-
----
-
-## 📊 Tabela Resumo
-
-| # | Benefício | Impacto Direto | Métrica |
-|:-:|-----------|----------------|---------|
-| 1 | 🎯 DSL unificada | Adoção e consistência | Redução de erros de interpretação |
-| 2 | 🔍 Auditoria total | Compliance enterprise | Logs auditáveis por AST hash |
-| 3 | 🏋️ Training data autogerado | ML contínuo | Dataset cresce com uso real |
-| 4 | 🔄 Portabilidade entre swarms | Integração | Interop nativa via Hermes |
-| 5 | 🚦 Compile-time safety | Segurança | Erros detectados antes da execução |
-| 6 | ⚡ Otimização DAG | Performance | Paralelismo automático, menos tokens |
-| 7 | 🧠 Memória 3 camadas | Qualidade RAG | BM25 + Vector + Graph fusion |
-| 8 | 🔌 Marketplace de skills | Ecossistema | Skills versionadas e compartilháveis |
-| 9 | 🧪 Simulação pré-execução | Experiência do usuário | Custo conhecido antes de rodar |
-| 10 | 🏆 Diferencial competitivo | Negócio | Nenhum concorrente tem DSL própria |
+- Compile-time type safety
+- Automatic training data generation
+- Cross-swarm portability
+- Hybrid 3-layer memory
+- Versioned skill marketplace
+- Pre-execution simulation
 
 ---
 
-## 🚀 Conclusão
+## 📊 Summary Table
 
-O TAC não é só "mais uma ferramenta" — é a **fundação arquitetural** que transforma a TacFlow de uma plataforma de agentes genérica em um **ecossistema de linguagem próprio**.
-
-Com TAC, a plataforma ganha:
-- 🔒 **Segurança** em tempo de compilação (Trust Types)
-- ♻️ **Melhoria contínua** (training data autogerado para LoRA)
-- 🔗 **Interoperabilidade** nativa entre swarms
-- 🧪 **Transparência** de custos (simulação pré-execução)
-- 🏪 **Escalabilidade** de negócio (marketplace de skills)
-
-> *"A linguagem não é uma ferramenta. É uma forma de pensar."*
+| # | Benefit | Direct Impact | Metric |
+|:-:|---------|---------------|--------|
+| 1 | 🎯 Unified DSL | Adoption and consistency | Reduced interpretation errors |
+| 2 | 🔍 Total auditability | Enterprise compliance | Auditable logs by AST hash |
+| 3 | 🏋️ Auto training data | Continuous ML | Dataset grows with real usage |
+| 4 | 🔄 Cross-swarm portability | Integration | Native interop via Hermes |
+| 5 | 🚦 Compile-time safety | Security | Errors caught before execution |
+| 6 | ⚡ DAG optimization | Performance | Automatic parallelism, fewer tokens |
+| 7 | 🧠 3-layer memory | RAG quality | BM25 + Vector + Graph fusion |
+| 8 | 🔌 Skill marketplace | Ecosystem | Versioned, shareable skills |
+| 9 | 🧪 Pre-execution simulation | User experience | Known cost before running |
+| 10 | 🏆 Competitive moat | Business | No competitor has an own DSL |
 
 ---
 
-📅 **Junho 2026** — TacFlow Platform
-✍️ **Autor:** TacFlow Architect
-📄 **Versão:** v2.0
+## 🚀 Conclusion
+
+TAC is not just "one more tool" — it is the **architectural foundation** that transforms TacFlow from a generic agent platform into a **language ecosystem of its own**.
+
+With TAC, the platform gains:
+- 🔒 **Compile-time security** (Trust Types)
+- ♻️ **Continuous improvement** (auto-generated LoRA training data)
+- 🔗 **Native cross-swarm interoperability**
+- 🧪 **Cost transparency** (pre-execution simulation)
+- 🏪 **Business scalability** (skill marketplace)
+
+> *"A language is not a tool. It is a way of thinking."*
+
+---
+
+📅 **June 2026** — TacFlow Platform
+✍️ **Author:** TacFlow Architect
+📄 **Version:** v2.0
