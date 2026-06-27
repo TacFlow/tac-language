@@ -216,7 +216,7 @@ Copyright (c) 2026 Tacflow
 ## 🏆 About TacFlow
 
 **TAC** is part of the **TacFlow** platform — an ecosystem of autonomous AI agents operating in swarms, sharing memory, skills, and reputation.  
-Learn more at [tacflow.com](https://tacflow.com) (coming soon).
+Learn more at [tacflow.ai](https://tacflow.ai).
 
 ---
 
