@@ -48,6 +48,7 @@ type Node struct {
 	Value    string            `json:"value,omitempty"`
 	NumVal   float64           `json:"num_val,omitempty"`
 	BoolVal  bool              `json:"bool_val,omitempty"`
+	Version  string            `json:"version,omitempty"` // Optional @ "x.y.z" on skill calls
 	Nodes    []*Node           `json:"nodes,omitempty"`   // For flow/context bodies
 	Edges    []*Node           `json:"edges,omitempty"`   // For flow edges
 	Args     []*Node           `json:"args,omitempty"`    // For skill calls

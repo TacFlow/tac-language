@@ -8,9 +8,10 @@ flow "Graph Builder" {
     prompt: "Extract key concepts and relationships from this text",
     context: fetch.result
   )
+  node "verify"    -> skill verify(source: extract.result)
   node "store_nodes" -> skill memory_store(
-    text: extract.result.concepts,
-    tags: ["concept", url.tag]
+    text: verify.result,
+    tags: ["concept"]
   )
   node "relate_nodes" {
     for each relationship in extract.result.relationships {
@@ -23,8 +24,9 @@ flow "Graph Builder" {
   }
 
   fetch -> extract
-  extract -> store_nodes
-  extract -> relate_nodes
+  extract -> verify
+  verify -> store_nodes
+  verify -> relate_nodes
 
   on "init" -> fetch
 }

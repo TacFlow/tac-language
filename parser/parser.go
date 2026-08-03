@@ -255,6 +255,14 @@ func (p *Parser) parseSkillCall(nameTok lexer.Token) *ast.Node {
 	n.Value = nameTok.Value
 	n.Args = make([]*ast.Node, 0)
 
+	// Optional version: @ "1.4.2"
+	if p.peek().Type == lexer.At {
+		p.advance() // @
+		if p.peek().Type == lexer.String {
+			n.Version = p.advance().Value
+		}
+	}
+
 	if p.peek().Type == lexer.LParen {
 		p.advance()
 		p.skipNewlines()

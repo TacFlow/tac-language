@@ -30,8 +30,8 @@ flow "Web Q&A" {
   node "learn" {
     if verify.confidence > 0.9 {
       skill memory_store(
-        text: synthesize.result,
-        tags: ["qa", "verified", question.tag]
+        text: verify.result,
+        tags: ["qa", "verified"]
       )
     }
   }

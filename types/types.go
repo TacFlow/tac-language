@@ -49,42 +49,51 @@ const (
 )
 
 // conversionTable maps source→target trust type conversions.
-// Based on SPEC §5.3 Type Conversion Rules.
+// Based on SPEC v0.3 §13.2 Required conversion rules.
+//
+//	Untrusted → Fact         = explicit (validate)
+//	Hallucinable → Fact      = explicit (verify)
+//	Secret → Hallucinable    = forbidden
+//	Secret → Untrusted       = forbidden
+//	Secret → Fact            = explicit (policy-controlled)
+//	Control → Fact           = explicit (authorize)
+//	Fact → Untrusted         = direct (allowed but discouraged)
+//	Fact → Hallucinable      = direct
 var conversionTable = map[TrustType]map[TrustType]ConversionRule{
 	Secret: {
-		Secret:      ConvertDirect,
-		Untrusted:   ConvertForbidden,
-		Fact:        ConvertForbidden,
+		Secret:       ConvertDirect,
+		Untrusted:    ConvertForbidden,
+		Fact:         ConvertExplicit, // policy-controlled only
 		Hallucinable: ConvertForbidden,
-		Control:     ConvertForbidden,
+		Control:      ConvertForbidden,
 	},
 	Untrusted: {
-		Secret:      ConvertForbidden,
-		Untrusted:   ConvertDirect,
-		Fact:        ConvertExplicit, // require validate()
+		Secret:       ConvertForbidden,
+		Untrusted:    ConvertDirect,
+		Fact:         ConvertExplicit, // require validate()
 		Hallucinable: ConvertExplicit, // require sanitize()
-		Control:     ConvertForbidden,
+		Control:      ConvertForbidden,
 	},
 	Fact: {
-		Secret:      ConvertForbidden,
-		Untrusted:   ConvertDirect,
-		Fact:        ConvertDirect,
+		Secret:       ConvertForbidden,
+		Untrusted:    ConvertDirect,   // allowed but discouraged
+		Fact:         ConvertDirect,
 		Hallucinable: ConvertDirect,
-		Control:     ConvertForbidden,
+		Control:      ConvertForbidden,
 	},
 	Hallucinable: {
-		Secret:      ConvertForbidden,
-		Untrusted:   ConvertDirect,
-		Fact:        ConvertExplicit, // require verify()
+		Secret:       ConvertForbidden,
+		Untrusted:    ConvertDirect,
+		Fact:         ConvertExplicit, // require verify()
 		Hallucinable: ConvertDirect,
-		Control:     ConvertForbidden,
+		Control:      ConvertForbidden,
 	},
 	Control: {
-		Secret:      ConvertForbidden,
-		Untrusted:   ConvertForbidden,
-		Fact:        ConvertForbidden,
+		Secret:       ConvertForbidden,
+		Untrusted:    ConvertForbidden,
+		Fact:         ConvertExplicit, // require explicit authorization
 		Hallucinable: ConvertForbidden,
-		Control:     ConvertDirect,
+		Control:      ConvertDirect,
 	},
 }
 
@@ -119,6 +128,10 @@ func ConversionFunction(from, to TrustType) string {
 		return "sanitize"
 	case from == Hallucinable && to == Fact:
 		return "verify"
+	case from == Secret && to == Fact:
+		return "authorize"
+	case from == Control && to == Fact:
+		return "authorize"
 	default:
 		return ""
 	}

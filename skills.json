@@ -1,0 +1,52 @@
+[
+  {
+    "name": "sentiment_analyzer",
+    "version": "1.0",
+    "return_type": "Hallucinable",
+    "args": ["text", "model"],
+    "arg_types": {},
+    "description": "Analyze sentiment of input text with confidence score",
+    "runtime": "python",
+    "entrypoint": "skills.sentiment:analyze",
+    "artifact": "sentiment-analyzer-1.0.0.tar.gz",
+    "digest": "sha256:abc123def456",
+    "signature": "MEUCIQD...",
+    "input_schema": "{\"type\":\"object\",\"properties\":{\"text\":{\"type\":\"string\"}}}",
+    "output_schema": "{\"type\":\"object\",\"properties\":{\"sentiment\":{\"type\":\"string\"},\"confidence\":{\"type\":\"number\"}}}",
+    "capabilities": ["nlp", "classification"],
+    "permissions": {"network": "none", "filesystem": "read-only"},
+    "execution": {
+      "timeout_seconds": 30,
+      "memory_mb": 256,
+      "cpu": 1,
+      "retries": 1,
+      "idempotent": true,
+      "cancellable": true
+    }
+  },
+  {
+    "name": "pdf_extractor",
+    "version": "2.1",
+    "return_type": "Fact",
+    "args": ["file_path", "pages"],
+    "arg_types": {},
+    "description": "Extract structured text and tables from PDF documents",
+    "runtime": "python",
+    "entrypoint": "skills.pdf_extractor:extract",
+    "artifact": "pdf-extractor-2.1.0.tar.gz",
+    "digest": "sha256:def789abc012",
+    "signature": "MEQCIQD...",
+    "input_schema": "{\"type\":\"object\",\"properties\":{\"file_path\":{\"type\":\"string\"},\"pages\":{\"type\":\"array\",\"items\":{\"type\":\"integer\"}}}}",
+    "output_schema": "{\"type\":\"object\",\"properties\":{\"text\":{\"type\":\"string\"},\"tables\":{\"type\":\"array\"}}}",
+    "capabilities": ["document", "extraction"],
+    "permissions": {"network": "none", "filesystem": "read"},
+    "execution": {
+      "timeout_seconds": 120,
+      "memory_mb": 512,
+      "cpu": 2,
+      "retries": 2,
+      "idempotent": true,
+      "cancellable": true
+    }
+  }
+]

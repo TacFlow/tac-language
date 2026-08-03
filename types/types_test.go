@@ -12,12 +12,14 @@ func TestCanConvert(t *testing.T) {
 	}{
 		{Secret, Secret, ConvertDirect, true},
 		{Secret, Untrusted, ConvertForbidden, false},
+		{Secret, Fact, ConvertExplicit, true},
 		{Untrusted, Fact, ConvertExplicit, true},
 		{Untrusted, Hallucinable, ConvertExplicit, true},
 		{Fact, Hallucinable, ConvertDirect, true},
 		{Hallucinable, Fact, ConvertExplicit, true},
 		{Hallucinable, Untrusted, ConvertDirect, true},
-		{Control, Fact, ConvertForbidden, false},
+		{Control, Fact, ConvertExplicit, true},
+		{Fact, Untrusted, ConvertDirect, true},
 	}
 
 	for _, tt := range tests {
@@ -65,6 +67,8 @@ func TestConversionFunction(t *testing.T) {
 		{Untrusted, Fact, "validate"},
 		{Untrusted, Hallucinable, "sanitize"},
 		{Hallucinable, Fact, "verify"},
+		{Secret, Fact, "authorize"},
+		{Control, Fact, "authorize"},
 		{Fact, Hallucinable, ""},
 		{Secret, Secret, ""},
 	}

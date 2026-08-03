@@ -11,6 +11,7 @@ package formatter
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/tacflow1-tech/tac-language/ast"
@@ -103,7 +104,8 @@ func (w *fmtWriter) writeObjectLiteral(n *ast.Node) {
 	}
 	w.write("{\n")
 	w.depth++
-	for key, val := range n.MapVal {
+	for _, key := range sortedMapKeys(n.MapVal) {
+		val := n.MapVal[key]
 		w.writeln("%s: ", key)
 		w.depth++
 		w.writeln("%s", nodeValueStr(val))
@@ -131,7 +133,8 @@ func (w *fmtWriter) writeAttrs(attrs map[string]*ast.Node) {
 	}
 	w.write(" {\n")
 	w.depth++
-	for key, val := range attrs {
+	for _, key := range sortedMapKeys(attrs) {
+		val := attrs[key]
 		w.writeln("%s: %s", key, nodeValueStr(val))
 	}
 	w.depth--
@@ -231,7 +234,8 @@ func (w *fmtWriter) writeTrigger(n *ast.Node) {
 	if n.Attrs != nil {
 		w.write(" {\n")
 		w.depth++
-		for key, val := range n.Attrs {
+		for _, key := range sortedMapKeys(n.Attrs) {
+			val := n.Attrs[key]
 			w.writeln("%s: %s", key, nodeValueStr(val))
 		}
 		w.depth--
@@ -282,7 +286,8 @@ func (w *fmtWriter) writeFlow(flow *ast.Node) {
 			w.writeln("agent %q {", agName)
 			if child.Attrs != nil {
 				w.depth++
-				for key, val := range child.Attrs {
+				for _, key := range sortedMapKeys(child.Attrs) {
+					val := child.Attrs[key]
 					w.writeln("%s: %s", key, nodeValueStr(val))
 				}
 				w.depth--
@@ -345,7 +350,8 @@ func (w *fmtWriter) writeRemember(n *ast.Node) {
 	if n.Attrs != nil {
 		w.write(" {\n")
 		w.depth++
-		for key, val := range n.Attrs {
+		for _, key := range sortedMapKeys(n.Attrs) {
+			val := n.Attrs[key]
 			w.writeln("%s: %s", key, nodeValueStr(val))
 		}
 		w.depth--
@@ -363,7 +369,8 @@ func (w *fmtWriter) writeRecall(n *ast.Node) {
 	if n.Attrs != nil {
 		w.write(" {\n")
 		w.depth++
-		for key, val := range n.Attrs {
+		for _, key := range sortedMapKeys(n.Attrs) {
+			val := n.Attrs[key]
 			w.writeln("%s: %s", key, nodeValueStr(val))
 		}
 		w.depth--
@@ -384,7 +391,8 @@ func (w *fmtWriter) writeRelate(n *ast.Node) {
 	w.writeln("relate %s -> %s {", src, tgt)
 	if n.Attrs != nil {
 		w.depth++
-		for key, val := range n.Attrs {
+		for _, key := range sortedMapKeys(n.Attrs) {
+			val := n.Attrs[key]
 			w.writeln("%s: %s", key, nodeValueStr(val))
 		}
 		w.depth--
@@ -396,7 +404,8 @@ func (w *fmtWriter) writeAutoSummarize(n *ast.Node) {
 	w.write("%sauto_summarize(", w.indent())
 	if n.Attrs != nil {
 		parts := make([]string, 0, len(n.Attrs))
-		for key, val := range n.Attrs {
+		for _, key := range sortedMapKeys(n.Attrs) {
+			val := n.Attrs[key]
 			parts = append(parts, fmt.Sprintf("%s: %s", key, nodeValueStr(val)))
 		}
 		w.raw(strings.Join(parts, ", "))
@@ -430,6 +439,17 @@ func (w *fmtWriter) writeProgram(program *ast.Node) {
 	}
 }
 
+// sortedMapKeys returns the sorted keys of a string→*Node map to guarantee
+// deterministic output regardless of Go map iteration order.
+func sortedMapKeys(m map[string]*ast.Node) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
+}
+
 // nodeValueStr converts an AST value node to its string representation.
 func nodeValueStr(n *ast.Node) string {
 	if n == nil {
@@ -458,8 +478,10 @@ func nodeValueStr(n *ast.Node) string {
 		}
 		return n.Value
 	case ast.NodeObjectLiteral:
-		parts := make([]string, 0, len(n.MapVal))
-		for key, val := range n.MapVal {
+		keys := sortedMapKeys(n.MapVal)
+		parts := make([]string, 0, len(keys))
+		for _, key := range keys {
+			val := n.MapVal[key]
 			parts = append(parts, fmt.Sprintf("%s: %s", key, nodeValueStr(val)))
 		}
 		return fmt.Sprintf("{%s}", strings.Join(parts, ", "))

@@ -555,9 +555,9 @@
                           "type": "Identifier",
                           "pos": {
                             "line": 33,
-                            "col": 32
+                            "col": 28
                           },
-                          "value": "synthesize.result"
+                          "value": "verify.result"
                         }
                       ],
                       "value": "text"
@@ -591,14 +591,6 @@
                                 "col": 32
                               },
                               "value": "verified"
-                            },
-                            {
-                              "type": "Identifier",
-                              "pos": {
-                                "line": 34,
-                                "col": 46
-                              },
-                              "value": "question.tag"
                             }
                           ]
                         }

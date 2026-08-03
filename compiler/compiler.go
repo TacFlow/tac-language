@@ -9,6 +9,7 @@ package compiler
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/tacflow1-tech/tac-language/ast"
 	"github.com/tacflow1-tech/tac-language/manifest"
@@ -16,14 +17,45 @@ import (
 )
 
 // FlowJSON is the output format consumed by the TacFlow flow engine.
+// Enhanced per SPEC v0.3 §17 with registry snapshot, fingerprint, skill metadata.
 type FlowJSON struct {
-	ID       string        `json:"id,omitempty"`
-	Name     string        `json:"name"`
-	Version  string        `json:"version"`
-	Nodes    []FlowNode    `json:"nodes"`
-	Edges    []FlowEdge    `json:"edges"`
-	Triggers []FlowTrigger `json:"triggers,omitempty"`
-	Manifest *manifest.Manifest `json:"manifest,omitempty"`
+	FlowID            string            `json:"flow_id"`
+	Name              string            `json:"name"`
+	Version           string            `json:"version"`
+	Language          LanguageMeta      `json:"language"`
+	RegistrySnapshot  string            `json:"registry_snapshot,omitempty"`
+	TrustPolicyVersion string           `json:"trust_policy_version,omitempty"`
+	Fingerprint       string            `json:"fingerprint,omitempty"`
+	Nodes             []FlowNode        `json:"nodes"`
+	Edges             []FlowEdge        `json:"edges"`
+	Triggers          []FlowTrigger     `json:"triggers,omitempty"`
+	Manifest          *manifest.Manifest `json:"manifest,omitempty"`
+}
+
+// LanguageMeta stamps the language and compiler versions used to produce the
+// Flow JSON, ensuring reproducibility and auditability (SPEC v0.3 §8).
+type LanguageMeta struct {
+	Name            string `json:"name"`
+	LanguageVersion string `json:"language_version"`
+	CompilerVersion string `json:"compiler_version"`
+	IRVersion       string `json:"ir_version"`
+}
+
+// ConditionIR is a structured condition expression (SPEC §10, Stage 2).
+// Instead of flattening conditions to opaque strings, the compiler emits
+// a structured form the runtime can evaluate without reparsing.
+type ConditionIR struct {
+	Operator string      `json:"operator"`
+	Left     ConditionOp `json:"left"`
+	Right    ConditionOp `json:"right"`
+}
+
+// ConditionOp is one operand of a condition expression.
+type ConditionOp struct {
+	Kind  string      `json:"kind"`  // "node_output", "number", "string", "bool"
+	Node  string      `json:"node,omitempty"`
+	Path  string      `json:"path,omitempty"`
+	Value interface{} `json:"value,omitempty"`
 }
 
 // FlowNode represents a single executable step.
@@ -37,10 +69,10 @@ type FlowNode struct {
 
 // FlowEdge represents a dependency between two steps.
 type FlowEdge struct {
-	From      string            `json:"from"`
-	To        string            `json:"to"`
-	Condition string            `json:"condition,omitempty"`
-	Fallback  string            `json:"fallback,omitempty"`
+	From      string        `json:"from"`
+	To        string        `json:"to"`
+	Condition *ConditionIR  `json:"condition,omitempty"`
+	Fallback  string        `json:"fallback,omitempty"`
 }
 
 // FlowTrigger represents an event-driven activation.
@@ -59,8 +91,14 @@ func Compile(flow *ast.Node) (*FlowJSON, error) {
 	fj := &FlowJSON{
 		Name:    flow.Value,
 		Version: "1.0",
-		Nodes:   make([]FlowNode, 0),
-		Edges:   make([]FlowEdge, 0),
+		Language: LanguageMeta{
+			Name:            "TAC",
+			LanguageVersion: "0.3",
+			CompilerVersion: "0.3.0",
+			IRVersion:       "1.1",
+		},
+		Nodes:    make([]FlowNode, 0),
+		Edges:    make([]FlowEdge, 0),
 		Manifest: manifest.ExtractManifest(flow),
 	}
 
@@ -110,8 +148,8 @@ func Compile(flow *ast.Node) (*FlowJSON, error) {
 			To:   nodeIDs[tgt],
 		}
 
-		if cond, fb, hasCond := ast.EdgeCondition(edge); hasCond {
-			fe.Condition = cond
+		if _, fb, hasCond := ast.EdgeCondition(edge); hasCond {
+			fe.Condition = compileCondition(edge.Attrs["if"])
 			if fb != "" {
 				if fbID, ok := nodeIDs[fb]; ok {
 					fe.Fallback = fbID
@@ -250,6 +288,47 @@ func nodeToValue(n *ast.Node) interface{} {
 		return arr
 	default:
 		return n.Value
+	}
+}
+
+// compileCondition converts a structured AST Condition node into a ConditionIR
+// that the runtime can evaluate without reparsing.
+func compileCondition(condNode *ast.Node) *ConditionIR {
+	if condNode == nil || condNode.Type != ast.NodeCondition || len(condNode.Children) < 2 {
+		return nil
+	}
+	lhs := condNode.Children[0]
+	rhs := condNode.Children[1]
+	return &ConditionIR{
+		Operator: condNode.Value,
+		Left:     compileConditionOp(lhs),
+		Right:    compileConditionOp(rhs),
+	}
+}
+
+// compileConditionOp converts an AST node into a structured ConditionOp.
+func compileConditionOp(n *ast.Node) ConditionOp {
+	if n == nil {
+		return ConditionOp{}
+	}
+	switch n.Type {
+	case ast.NodeIdentifier:
+		// Dotted identifier like "verify.confidence" or "a.confidence"
+		v := n.Value
+		op := ConditionOp{Kind: "node_output", Node: v}
+		if idx := strings.Index(v, "."); idx > 0 {
+			op.Node = v[:idx]
+			op.Path = v[idx+1:]
+		}
+		return op
+	case ast.NodeNumberLiteral:
+		return ConditionOp{Kind: "number", Value: n.NumVal}
+	case ast.NodeStringLiteral:
+		return ConditionOp{Kind: "string", Value: n.Value}
+	case ast.NodeBoolLiteral:
+		return ConditionOp{Kind: "bool", Value: n.BoolVal}
+	default:
+		return ConditionOp{Kind: "unknown", Value: n.Value}
 	}
 }
 

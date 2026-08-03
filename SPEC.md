@@ -46,9 +46,15 @@ The TAC interpreter is a **4-stage pipeline** composed of:
 | Role | Component | Implementation |
 |------|-----------|---------------|
 | **Parser** | `tac-parser` | Compiled Go binary (~2 MB), subprocess |
-| **Compiler** | Agent (TacFlow Architect) | Skill `tac_compile` — transforms AST into Flow JSON |
+| **Semantic Analyzer** | Go | `semantic` package — validates DAG, types, skills |
+| **Compiler** | Go | `compiler` package — transforms AST into Flow JSON |
 | **Executor** | TacFlow Runtime | `flow-management` native skill |
+| **Planner/Author** | Human or LLM Agent | Creates/modifies TAC source — does NOT compile TAC |
 | **Memory Logger** | Agent | Post-execution calls to `memory_store` + `swarm_teach` |
+
+> **Key distinction:** The LLM (TacFlow Architect or any agent) *authors* TAC source code.
+> It does NOT compile TAC. Compilation from AST → Flow JSON is a **deterministic Go function**
+> with no LLM involvement — it is fast, reproducible, and auditable.
 
 ---
 
@@ -523,21 +529,57 @@ Skills are the only callable units in TAC. Every skill maps to a real TacFlow AP
 
 ### 7.2 Custom Skills
 
-```tac
-// Define a custom skill (internal, not exposed as API)
-skill summarize(texts: [String], max_length: Int = 200) {
-  // Implementation is a flow
-  flow "summarize_flow" {
-    node "call_llm" -> skill llm.chat(
-      prompt: "Summarize these texts in under ${max_length} words",
-      context: texts
-    )
-    
-    on "init" -> call_llm
+Custom skills extend the standard library with Python-executable packages loaded
+from an external JSON registry file. Each skill is a self-contained artifact with
+full runtime metadata.
+
+```json
+{
+  "name": "sentiment_analyzer",
+  "version": "1.0",
+  "return_type": "Hallucinable",
+  "args": ["text", "model"],
+  "arg_types": {},
+  "description": "Analyze sentiment with confidence score",
+  "runtime": "python",
+  "entrypoint": "skills.sentiment:analyze",
+  "artifact": "sentiment-analyzer-1.0.0.tar.gz",
+  "digest": "sha256:abc123def456",
+  "signature": "MEUCIQD...",
+  "input_schema": "{...}",
+  "output_schema": "{...}",
+  "capabilities": ["nlp", "classification"],
+  "permissions": {"network": "none", "filesystem": "read-only"},
+  "execution": {
+    "timeout_seconds": 30,
+    "memory_mb": 256,
+    "cpu": 1,
+    "retries": 1,
+    "idempotent": true,
+    "cancellable": true
   }
-  
-  return call_llm.result
 }
+```
+
+**Required fields for production skills:**
+
+| Field | Purpose |
+|-------|---------|
+| `name` | Unique skill identifier |
+| `runtime` | Execution runtime: `"python"`, `"container"`, or `"go"` |
+| `entrypoint` | Module path and function, e.g. `skills.sentiment:analyze` |
+| `artifact` | Package filename for deployment |
+| `digest` | SHA-256 hash of the artifact (enforced in `--mode production`) |
+| `signature` | Cryptographic signature (enforced in `--mode production`) |
+| `input_schema` | JSON Schema for input validation (enforced in production) |
+| `output_schema` | JSON Schema for output validation (enforced in production) |
+
+**Loading custom skills:**
+
+```bash
+# Register custom Python skills
+tac validate flow.tac --registry skills.json --strict
+tac compile flow.tac --registry skills.json --strict
 ```
 
 ---
@@ -654,20 +696,28 @@ set_token_limit(max: 2000, scope: "flow")
 │  }                                                            │
 └──────────────────────────────────────────────────────────────┘
          │
-         ▼  ─── Stage 2: COMPILATION ───
+         ▼  ─── Stage 2: SEMANTIC ANALYSIS + COMPILATION ───
 ┌──────────────────────────────────────────────────────────────┐
-│  🔧 TAC Compiler (Agent skill — tac_compile)                  │
+│  🔧 TAC Compiler (Go — compiler package)                      │
 │                                                               │
 │  Input:  AST JSON                                             │
 │  Output: Flow Definition JSON (ready for flow engine)         │
 │                                                               │
 │  Steps:                                                       │
-│  1. Validate node references                                  │
-│  2. Resolve skill names to real API endpoints                 │
-│  3. Build dependency graph                                    │
-│  4. Inject memory logging callbacks                           │
-│  5. Type-check (Secret, Untrusted, etc.)                     │
-│  6. Optimize parallel edges                                   │
+│  1. Semantic validation:                                      │
+│     - Validate node references                                │
+│     - Resolve skill names to known capabilities               │
+│     - Build dependency graph                                  │
+│     - Detect cycles (Kahn's algorithm)                        │
+│     - Detect unreachable nodes                                │
+│     - Trust-type dataflow checking                            │
+│                                                               │
+│  2. Compilation:                                              │
+│     - Convert nodes, edges, triggers to Flow JSON             │
+│     - Compile conditions to structured IR                     │
+│     - Inject memory logging callbacks                         │
+│     - Optimize parallel edges                                 │
+│     - Stamp language + compiler version metadata              │
 └──────────────────────────────────────────────────────────────┘
          │
          ▼  ─── Stage 3: EXECUTION ───

@@ -40,14 +40,14 @@
         {
           "type": "Trigger",
           "pos": {
-            "line": 29,
+            "line": 31,
             "col": 5
           },
           "children": [
             {
               "type": "StringLiteral",
               "pos": {
-                "line": 29,
+                "line": 31,
                 "col": 12
               },
               "value": "init"
@@ -55,7 +55,7 @@
             {
               "type": "Identifier",
               "pos": {
-                "line": 29,
+                "line": 31,
                 "col": 21
               },
               "value": "fetch"
@@ -205,6 +205,52 @@
               "type": "StringLiteral",
               "pos": {
                 "line": 11,
+                "col": 16
+              },
+              "value": "verify"
+            },
+            {
+              "type": "SkillCall",
+              "pos": {
+                "line": 11,
+                "col": 35
+              },
+              "value": "verify",
+              "args": [
+                {
+                  "type": "NamedArg",
+                  "pos": {
+                    "line": 11,
+                    "col": 42
+                  },
+                  "children": [
+                    {
+                      "type": "Identifier",
+                      "pos": {
+                        "line": 11,
+                        "col": 58
+                      },
+                      "value": "extract.result"
+                    }
+                  ],
+                  "value": "source"
+                }
+              ]
+            }
+          ],
+          "value": "verify"
+        },
+        {
+          "type": "Node",
+          "pos": {
+            "line": 12,
+            "col": 7
+          },
+          "children": [
+            {
+              "type": "StringLiteral",
+              "pos": {
+                "line": 12,
                 "col": 21
               },
               "value": "store_nodes"
@@ -212,29 +258,11 @@
             {
               "type": "SkillCall",
               "pos": {
-                "line": 11,
+                "line": 12,
                 "col": 43
               },
               "value": "memory_store",
               "args": [
-                {
-                  "type": "NamedArg",
-                  "pos": {
-                    "line": 12,
-                    "col": 9
-                  },
-                  "children": [
-                    {
-                      "type": "Identifier",
-                      "pos": {
-                        "line": 12,
-                        "col": 34
-                      },
-                      "value": "extract.result.concepts"
-                    }
-                  ],
-                  "value": "text"
-                },
                 {
                   "type": "NamedArg",
                   "pos": {
@@ -243,27 +271,37 @@
                   },
                   "children": [
                     {
-                      "type": "ArrayLiteral",
+                      "type": "Identifier",
                       "pos": {
                         "line": 13,
+                        "col": 24
+                      },
+                      "value": "verify.result"
+                    }
+                  ],
+                  "value": "text"
+                },
+                {
+                  "type": "NamedArg",
+                  "pos": {
+                    "line": 14,
+                    "col": 9
+                  },
+                  "children": [
+                    {
+                      "type": "ArrayLiteral",
+                      "pos": {
+                        "line": 14,
                         "col": 12
                       },
                       "arr_val": [
                         {
                           "type": "StringLiteral",
                           "pos": {
-                            "line": 13,
+                            "line": 14,
                             "col": 21
                           },
                           "value": "concept"
-                        },
-                        {
-                          "type": "Identifier",
-                          "pos": {
-                            "line": 13,
-                            "col": 30
-                          },
-                          "value": "url.tag"
                         }
                       ]
                     }
@@ -278,14 +316,14 @@
         {
           "type": "Node",
           "pos": {
-            "line": 15,
+            "line": 16,
             "col": 7
           },
           "children": [
             {
               "type": "StringLiteral",
               "pos": {
-                "line": 15,
+                "line": 16,
                 "col": 22
               },
               "value": "relate_nodes"
@@ -296,14 +334,14 @@
             {
               "type": "Identifier",
               "pos": {
-                "line": 16,
+                "line": 17,
                 "col": 8
               },
               "children": [
                 {
                   "type": "Identifier",
                   "pos": {
-                    "line": 16,
+                    "line": 17,
                     "col": 26
                   },
                   "value": "relationship"
@@ -311,7 +349,7 @@
                 {
                   "type": "Identifier",
                   "pos": {
-                    "line": 16,
+                    "line": 17,
                     "col": 58
                   },
                   "value": "extract.result.relationships"
@@ -322,29 +360,11 @@
                 {
                   "type": "SkillCall",
                   "pos": {
-                    "line": 17,
+                    "line": 18,
                     "col": 25
                   },
                   "value": "graph_relate",
                   "args": [
-                    {
-                      "type": "NamedArg",
-                      "pos": {
-                        "line": 18,
-                        "col": 15
-                      },
-                      "children": [
-                        {
-                          "type": "Identifier",
-                          "pos": {
-                            "line": 18,
-                            "col": 34
-                          },
-                          "value": "relationship.from"
-                        }
-                      ],
-                      "value": "source"
-                    },
                     {
                       "type": "NamedArg",
                       "pos": {
@@ -356,6 +376,24 @@
                           "type": "Identifier",
                           "pos": {
                             "line": 19,
+                            "col": 34
+                          },
+                          "value": "relationship.from"
+                        }
+                      ],
+                      "value": "source"
+                    },
+                    {
+                      "type": "NamedArg",
+                      "pos": {
+                        "line": 20,
+                        "col": 15
+                      },
+                      "children": [
+                        {
+                          "type": "Identifier",
+                          "pos": {
+                            "line": 20,
                             "col": 32
                           },
                           "value": "relationship.to"
@@ -366,14 +404,14 @@
                     {
                       "type": "NamedArg",
                       "pos": {
-                        "line": 20,
+                        "line": 21,
                         "col": 13
                       },
                       "children": [
                         {
                           "type": "Identifier",
                           "pos": {
-                            "line": 20,
+                            "line": 21,
                             "col": 32
                           },
                           "value": "relationship.type"
@@ -392,14 +430,14 @@
         {
           "type": "Edge",
           "pos": {
-            "line": 25,
+            "line": 26,
             "col": 8
           },
           "children": [
             {
               "type": "Identifier",
               "pos": {
-                "line": 25,
+                "line": 26,
                 "col": 8
               },
               "value": "fetch"
@@ -407,35 +445,10 @@
             {
               "type": "Identifier",
               "pos": {
-                "line": 25,
+                "line": 26,
                 "col": 19
               },
               "value": "extract"
-            }
-          ]
-        },
-        {
-          "type": "Edge",
-          "pos": {
-            "line": 26,
-            "col": 10
-          },
-          "children": [
-            {
-              "type": "Identifier",
-              "pos": {
-                "line": 26,
-                "col": 10
-              },
-              "value": "extract"
-            },
-            {
-              "type": "Identifier",
-              "pos": {
-                "line": 26,
-                "col": 25
-              },
-              "value": "store_nodes"
             }
           ]
         },
@@ -458,7 +471,57 @@
               "type": "Identifier",
               "pos": {
                 "line": 27,
-                "col": 26
+                "col": 20
+              },
+              "value": "verify"
+            }
+          ]
+        },
+        {
+          "type": "Edge",
+          "pos": {
+            "line": 28,
+            "col": 9
+          },
+          "children": [
+            {
+              "type": "Identifier",
+              "pos": {
+                "line": 28,
+                "col": 9
+              },
+              "value": "verify"
+            },
+            {
+              "type": "Identifier",
+              "pos": {
+                "line": 28,
+                "col": 24
+              },
+              "value": "store_nodes"
+            }
+          ]
+        },
+        {
+          "type": "Edge",
+          "pos": {
+            "line": 29,
+            "col": 9
+          },
+          "children": [
+            {
+              "type": "Identifier",
+              "pos": {
+                "line": 29,
+                "col": 9
+              },
+              "value": "verify"
+            },
+            {
+              "type": "Identifier",
+              "pos": {
+                "line": 29,
+                "col": 25
               },
               "value": "relate_nodes"
             }

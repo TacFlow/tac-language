@@ -1,0 +1,89 @@
+{
+  "tac_version": "2.0",
+  "name": "tacflow-builtin",
+  "description": "Built-in skill manifest for the TAC Language v2.0",
+  "author": "TacFlow",
+  "skills": {
+    "memory_search": {
+      "description": "Search BM25+Vector+Graph memory",
+      "params": [
+        {"name": "query", "required": true, "type": "string"},
+        {"name": "scope", "required": false, "type": "string"},
+        {"name": "top_k", "required": false, "type": "number"}
+      ],
+      "returns": "array"
+    },
+    "memory_store": {
+      "description": "Store in persistent memory",
+      "params": [
+        {"name": "text", "required": true, "type": "string|Fact"},
+        {"name": "tags", "required": false, "type": "array"}
+      ],
+      "returns": "object"
+    },
+    "web_search": {
+      "description": "Search the web via Brave Search",
+      "params": [
+        {"name": "query", "required": true, "type": "string"},
+        {"name": "count", "required": false, "type": "number"}
+      ],
+      "returns": "array"
+    },
+    "llm.chat": {
+      "description": "Call LLM with prompt",
+      "params": [
+        {"name": "prompt", "required": true, "type": "string"},
+        {"name": "context", "required": false, "type": "array"}
+      ],
+      "returns": "object"
+    },
+    "llm.classify": {
+      "params": [
+        {"name": "text", "required": true, "type": "string"}
+      ]
+    },
+    "verify": {
+      "description": "Fact-check a Hallucinable value",
+      "params": [
+        {"name": "source", "required": true, "type": "Hallucinable"}
+      ],
+      "returns": "Fact"
+    },
+    "validate": {
+      "description": "Sanitize an Untrusted value",
+      "params": [
+        {"name": "value", "required": true, "type": "Untrusted"}
+      ],
+      "returns": "Fact"
+    },
+    "tts.speak": {
+      "description": "Text-to-speech output",
+      "params": [
+        {"name": "text", "required": true, "type": "string"},
+        {"name": "voice", "required": false, "type": "string"}
+      ]
+    },
+    "agent_task": {
+      "description": "Delegate to swarm agent",
+      "params": [
+        {"name": "agent", "required": true, "type": "identifier"},
+        {"name": "payload", "required": true, "type": "string"},
+        {"name": "priority", "required": false, "type": "number"}
+      ],
+      "returns": "object"
+    },
+    "graph_search": {
+      "params": [
+        {"name": "query", "required": true, "type": "string"},
+        {"name": "depth", "required": false, "type": "number"}
+      ]
+    },
+    "graph_relate": {
+      "params": [
+        {"name": "source", "required": true, "type": "string"},
+        {"name": "target", "required": true, "type": "string"},
+        {"name": "type", "required": true, "type": "string"}
+      ]
+    }
+  }
+}

@@ -47,6 +47,7 @@ const (
 	RParen
 	LBrack
 	RBrack
+	At     // @ (version qualifier)
 	Newline
 	Comment
 	Error
@@ -127,6 +128,8 @@ func tokenTypeName(t TokenType) string {
 		return "["
 	case RBrack:
 		return "]"
+	case At:
+		return "@"
 	default:
 		return fmt.Sprintf("token(%d)", t)
 	}
@@ -418,6 +421,9 @@ func (l *Lexer) Scan() ([]Token, error) {
 		case ch == ']':
 			l.advance()
 			l.emit(RBrack, "]")
+		case ch == '@':
+			l.advance()
+			l.emit(At, "@")
 		case ch == '.':
 			l.advance()
 			l.emit(Dot, ".")
