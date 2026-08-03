@@ -7,9 +7,16 @@ It models how agents perceive, reason, remember, and execute tasks — as a **di
 
 ---
 
-## 🏗️ Compiler Architecture
+## 🏗️ Architecture Diagrams
 
-> *Diagram built by **TacFlow Architect** — an AI agent in the TacFlow swarm — using **Archify** within the TacFlow platform.*
+> *Both diagrams built by **TacFlow Architect** — an AI agent in the TacFlow swarm — using **Archify** within the TacFlow platform.*
+
+| Diagram | Description |
+|---------|-------------|
+| [**Execution Pipeline**](docs/tac-lang-pipeline.html) | Full 3-stage pipeline: Parse → Compile → Execute & Learn. Shows .tac source through AST, semantic analysis, DAG validation, compilation to Flow JSON, runtime execution, memory logging, and LoRA training data generation. |
+| [**Compiler Architecture**](docs/tac-architecture.html) | Modular compiler internals: 9 Go packages (lexer, parser, semantic, types, compiler, formatter, manifest), trust type system, and TacFlow platform integration (Flow Engine, Skill Registry, Agent Swarm, 3-Layer Memory). |
+
+### Compiler Architecture (Mermaid)
 
 ```mermaid
 graph LR
@@ -32,7 +39,8 @@ graph LR
     end
 ```
 
-> **[🔍 View interactive architecture diagram](docs/tac-architecture.html)** — full interactive diagram with Dark/Light mode, zoom, multiple views, and export (built with Archify).
+> **[🔍 View Execution Pipeline diagram](docs/tac-lang-pipeline.html)** — full 3-stage pipeline (Parse → Compile → Execute & Learn).
+> **[🔍 View Compiler Architecture diagram](docs/tac-architecture.html)** — modular internals with Dark/Light mode, zoom, and multiple views.
 
 ---
 
@@ -59,7 +67,8 @@ tac-language/
 │   └── multi_agent_review.tac  # Multi-agent code review orchestrator
 ├── testdata/                   # Golden file tests
 ├── docs/
-│   └── tac-architecture.html   # Interactive architecture diagram (Archify)
+│   ├── tac-lang-pipeline.html   # 3-stage pipeline diagram (Archify)
+│   └── tac-architecture.html   # Compiler architecture diagram (Archify)
 ├── tac_test.go                 # Test suite (17 tests + fuzz)
 ├── LICENSE                     # MIT License
 ├── README.md                   # This file
