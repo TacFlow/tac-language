@@ -2,6 +2,14 @@
 
 All notable changes to the TAC Language will be documented in this file.
 
+## [v0.1.1] — 2026-08-03
+
+### 📊 Documentation
+
+- **Architecture Diagram** — Interactive Archify diagram added to `docs/tac-lang-pipeline.html` showing the full 3-stage TAC execution pipeline (Parse → Compile → Execute & Learn)
+- Updated `README.md` with architecture overview and diagram link
+- Updated `SPEC.md` Section 10 with diagram reference
+
 ## [v0.1.0] — 2026-06-27
 
 ### 🚀 Initial Release

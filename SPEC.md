@@ -625,6 +625,8 @@ set_token_limit(max: 2000, scope: "flow")
 
 ## 10. Execution Pipeline
 
+> 📊 **Interactive diagram:** [tac-lang-pipeline.html](docs/tac-lang-pipeline.html) — view the full architecture rendered with Archify.
+
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │                        FILE .tac                             │

@@ -21,11 +21,22 @@ tac-language/
 │   ├── web_qa.tac           # Web Q&A flow (parallel search + synthesis)
 │   ├── graph_builder.tac    # Knowledge graph builder from web pages
 │   └── multi_agent_review.tac # Multi-agent code review orchestrator
-├── docs/                    # Future: additional documentation
+├── docs/
+│   └── tac-lang-pipeline.html # Architecture diagram (Archify)
 ├── LICENSE                  # MIT License
 ├── README.md                # This file
 └── .gitignore
 ```
+
+## 🏗️ Architecture
+
+The TAC execution pipeline transforms `.tac` source files into executable flows through 3 stages:
+
+```
+.tac Source → Parser (Go) → AST JSON → Compiler (Agent) → Flow JSON → Runtime → Memory + Training
+```
+
+📊 **[View Interactive Architecture Diagram →](docs/tac-lang-pipeline.html)**
 
 ---
 
