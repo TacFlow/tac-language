@@ -1,0 +1,559 @@
+{
+  "type": "Program",
+  "pos": {
+    "line": 1,
+    "col": 1
+  },
+  "nodes": [
+    {
+      "type": "Flow",
+      "pos": {
+        "line": 0,
+        "col": 0
+      },
+      "children": [
+        {
+          "type": "Input",
+          "pos": {
+            "line": 4,
+            "col": 8
+          },
+          "children": [
+            {
+              "type": "Identifier",
+              "pos": {
+                "line": 4,
+                "col": 21
+              },
+              "value": "code_snippet"
+            },
+            {
+              "type": "Identifier",
+              "pos": {
+                "line": 4,
+                "col": 32
+              },
+              "value": "Untrusted"
+            }
+          ]
+        },
+        {
+          "type": "AgentDecl",
+          "pos": {
+            "line": 7,
+            "col": 8
+          },
+          "children": [
+            {
+              "type": "StringLiteral",
+              "pos": {
+                "line": 7,
+                "col": 28
+              },
+              "value": "security_reviewer"
+            }
+          ],
+          "attrs": {
+            "model": {
+              "type": "StringLiteral",
+              "pos": {
+                "line": 9,
+                "col": 39
+              },
+              "value": "tacflow/deepseek-v4-flash"
+            },
+            "skill": {
+              "type": "Identifier",
+              "pos": {
+                "line": 8,
+                "col": 32
+              },
+              "value": "llm.analyze_security"
+            }
+          }
+        },
+        {
+          "type": "AgentDecl",
+          "pos": {
+            "line": 12,
+            "col": 8
+          },
+          "children": [
+            {
+              "type": "StringLiteral",
+              "pos": {
+                "line": 12,
+                "col": 31
+              },
+              "value": "performance_reviewer"
+            }
+          ],
+          "attrs": {
+            "model": {
+              "type": "StringLiteral",
+              "pos": {
+                "line": 14,
+                "col": 39
+              },
+              "value": "tacflow/deepseek-v4-flash"
+            },
+            "skill": {
+              "type": "Identifier",
+              "pos": {
+                "line": 13,
+                "col": 35
+              },
+              "value": "llm.analyze_performance"
+            }
+          }
+        },
+        {
+          "type": "AgentDecl",
+          "pos": {
+            "line": 17,
+            "col": 8
+          },
+          "children": [
+            {
+              "type": "StringLiteral",
+              "pos": {
+                "line": 17,
+                "col": 25
+              },
+              "value": "style_reviewer"
+            }
+          ],
+          "attrs": {
+            "model": {
+              "type": "StringLiteral",
+              "pos": {
+                "line": 19,
+                "col": 39
+              },
+              "value": "tacflow/deepseek-v4-flash"
+            },
+            "skill": {
+              "type": "Identifier",
+              "pos": {
+                "line": 18,
+                "col": 29
+              },
+              "value": "llm.analyze_style"
+            }
+          }
+        },
+        {
+          "type": "Trigger",
+          "pos": {
+            "line": 49,
+            "col": 5
+          },
+          "children": [
+            {
+              "type": "StringLiteral",
+              "pos": {
+                "line": 49,
+                "col": 12
+              },
+              "value": "init"
+            },
+            {
+              "type": "ArrayLiteral",
+              "pos": {
+                "line": 49,
+                "col": 17
+              },
+              "arr_val": [
+                {
+                  "type": "Identifier",
+                  "pos": {
+                    "line": 49,
+                    "col": 30
+                  },
+                  "value": "security_task"
+                },
+                {
+                  "type": "Identifier",
+                  "pos": {
+                    "line": 49,
+                    "col": 41
+                  },
+                  "value": "perf_task"
+                },
+                {
+                  "type": "Identifier",
+                  "pos": {
+                    "line": 49,
+                    "col": 53
+                  },
+                  "value": "style_task"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "value": "Multi-Agent Code Review",
+      "nodes": [
+        {
+          "type": "Node",
+          "pos": {
+            "line": 23,
+            "col": 7
+          },
+          "children": [
+            {
+              "type": "StringLiteral",
+              "pos": {
+                "line": 23,
+                "col": 23
+              },
+              "value": "security_task"
+            },
+            {
+              "type": "SkillCall",
+              "pos": {
+                "line": 23,
+                "col": 43
+              },
+              "value": "agent_task",
+              "args": [
+                {
+                  "type": "NamedArg",
+                  "pos": {
+                    "line": 24,
+                    "col": 10
+                  },
+                  "children": [
+                    {
+                      "type": "Identifier",
+                      "pos": {
+                        "line": 24,
+                        "col": 29
+                      },
+                      "value": "security_reviewer"
+                    }
+                  ],
+                  "value": "agent"
+                },
+                {
+                  "type": "NamedArg",
+                  "pos": {
+                    "line": 25,
+                    "col": 12
+                  },
+                  "children": [
+                    {
+                      "type": "StringLiteral",
+                      "pos": {
+                        "line": 25,
+                        "col": 78
+                      },
+                      "value": "Review this code for security vulnerabilities: ${code_snippet}"
+                    }
+                  ],
+                  "value": "payload"
+                }
+              ]
+            }
+          ],
+          "value": "security_task"
+        },
+        {
+          "type": "Node",
+          "pos": {
+            "line": 28,
+            "col": 7
+          },
+          "children": [
+            {
+              "type": "StringLiteral",
+              "pos": {
+                "line": 28,
+                "col": 19
+              },
+              "value": "perf_task"
+            },
+            {
+              "type": "SkillCall",
+              "pos": {
+                "line": 28,
+                "col": 39
+              },
+              "value": "agent_task",
+              "args": [
+                {
+                  "type": "NamedArg",
+                  "pos": {
+                    "line": 29,
+                    "col": 10
+                  },
+                  "children": [
+                    {
+                      "type": "Identifier",
+                      "pos": {
+                        "line": 29,
+                        "col": 32
+                      },
+                      "value": "performance_reviewer"
+                    }
+                  ],
+                  "value": "agent"
+                },
+                {
+                  "type": "NamedArg",
+                  "pos": {
+                    "line": 30,
+                    "col": 12
+                  },
+                  "children": [
+                    {
+                      "type": "StringLiteral",
+                      "pos": {
+                        "line": 30,
+                        "col": 72
+                      },
+                      "value": "Review this code for performance issues: ${code_snippet}"
+                    }
+                  ],
+                  "value": "payload"
+                }
+              ]
+            }
+          ],
+          "value": "perf_task"
+        },
+        {
+          "type": "Node",
+          "pos": {
+            "line": 33,
+            "col": 7
+          },
+          "children": [
+            {
+              "type": "StringLiteral",
+              "pos": {
+                "line": 33,
+                "col": 20
+              },
+              "value": "style_task"
+            },
+            {
+              "type": "SkillCall",
+              "pos": {
+                "line": 33,
+                "col": 40
+              },
+              "value": "agent_task",
+              "args": [
+                {
+                  "type": "NamedArg",
+                  "pos": {
+                    "line": 34,
+                    "col": 10
+                  },
+                  "children": [
+                    {
+                      "type": "Identifier",
+                      "pos": {
+                        "line": 34,
+                        "col": 26
+                      },
+                      "value": "style_reviewer"
+                    }
+                  ],
+                  "value": "agent"
+                },
+                {
+                  "type": "NamedArg",
+                  "pos": {
+                    "line": 35,
+                    "col": 12
+                  },
+                  "children": [
+                    {
+                      "type": "StringLiteral",
+                      "pos": {
+                        "line": 35,
+                        "col": 78
+                      },
+                      "value": "Review this code for style and best practices: ${code_snippet}"
+                    }
+                  ],
+                  "value": "payload"
+                }
+              ]
+            }
+          ],
+          "value": "style_task"
+        },
+        {
+          "type": "Node",
+          "pos": {
+            "line": 39,
+            "col": 7
+          },
+          "children": [
+            {
+              "type": "StringLiteral",
+              "pos": {
+                "line": 39,
+                "col": 21
+              },
+              "value": "consolidate"
+            },
+            {
+              "type": "SkillCall",
+              "pos": {
+                "line": 39,
+                "col": 39
+              },
+              "value": "llm.chat",
+              "args": [
+                {
+                  "type": "NamedArg",
+                  "pos": {
+                    "line": 40,
+                    "col": 11
+                  },
+                  "children": [
+                    {
+                      "type": "StringLiteral",
+                      "pos": {
+                        "line": 40,
+                        "col": 77
+                      },
+                      "value": "Combine these three code reviews into one comprehensive report"
+                    }
+                  ],
+                  "value": "prompt"
+                },
+                {
+                  "type": "NamedArg",
+                  "pos": {
+                    "line": 41,
+                    "col": 12
+                  },
+                  "children": [
+                    {
+                      "type": "ArrayLiteral",
+                      "pos": {
+                        "line": 41,
+                        "col": 15
+                      },
+                      "arr_val": [
+                        {
+                          "type": "Identifier",
+                          "pos": {
+                            "line": 41,
+                            "col": 35
+                          },
+                          "value": "security_task.result"
+                        },
+                        {
+                          "type": "Identifier",
+                          "pos": {
+                            "line": 41,
+                            "col": 53
+                          },
+                          "value": "perf_task.result"
+                        },
+                        {
+                          "type": "Identifier",
+                          "pos": {
+                            "line": 41,
+                            "col": 72
+                          },
+                          "value": "style_task.result"
+                        }
+                      ]
+                    }
+                  ],
+                  "value": "context"
+                }
+              ]
+            }
+          ],
+          "value": "consolidate"
+        }
+      ],
+      "edges": [
+        {
+          "type": "Edge",
+          "pos": {
+            "line": 45,
+            "col": 16
+          },
+          "children": [
+            {
+              "type": "Identifier",
+              "pos": {
+                "line": 45,
+                "col": 16
+              },
+              "value": "security_task"
+            },
+            {
+              "type": "Identifier",
+              "pos": {
+                "line": 45,
+                "col": 31
+              },
+              "value": "consolidate"
+            }
+          ]
+        },
+        {
+          "type": "Edge",
+          "pos": {
+            "line": 46,
+            "col": 12
+          },
+          "children": [
+            {
+              "type": "Identifier",
+              "pos": {
+                "line": 46,
+                "col": 12
+              },
+              "value": "perf_task"
+            },
+            {
+              "type": "Identifier",
+              "pos": {
+                "line": 46,
+                "col": 31
+              },
+              "value": "consolidate"
+            }
+          ]
+        },
+        {
+          "type": "Edge",
+          "pos": {
+            "line": 47,
+            "col": 13
+          },
+          "children": [
+            {
+              "type": "Identifier",
+              "pos": {
+                "line": 47,
+                "col": 13
+              },
+              "value": "style_task"
+            },
+            {
+              "type": "Identifier",
+              "pos": {
+                "line": 47,
+                "col": 31
+              },
+              "value": "consolidate"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

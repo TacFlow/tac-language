@@ -20,6 +20,11 @@ profile.cov
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
+# TAC Language binaries (root-level only)
+/tac-parser
+/tac
+/debug
+
 # Go workspace file
 go.work
 go.work.sum

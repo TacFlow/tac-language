@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "TAC Language — Compiler Architecture",
+    "subtitle": "Lexer → Parser → Semantic → Compiler pipeline with Trust Types and Swarm integration",
+    "output": "docs/tac-architecture.html",
+    "quality_profile": "standard",
+    "views": [
+      {
+        "id": "pipeline",
+        "label": "Compilation Pipeline",
+        "focus": ["source", "lexer", "parser", "semantic", "compiler", "flowjson"],
+        "note": "Follow the .tac source through lexing, parsing, semantic analysis, and compilation to Flow JSON."
+      },
+      {
+        "id": "runtime",
+        "label": "Runtime & Ecosystem",
+        "focus": ["flowjson", "flowengine", "skills", "swarm", "memory"],
+        "note": "Flow JSON feeds into TacFlow engine. Skills resolve against registry. Agents execute."
+      }
+    ]
+  },
+  "components": [
+    { "id": "source", "type": "external", "label": ".tac Source", "sublabel": "DSL input", "pos": [38, 300], "size": [130, 60], "tag": "user" },
+    { "id": "lexer", "type": "backend", "label": "Lexer", "sublabel": "Token stream", "pos": [230, 190], "size": [116, 58], "tag": "compiler" },
+    { "id": "parser", "type": "backend", "label": "Parser", "sublabel": "AST generation", "pos": [230, 390], "size": [116, 58], "tag": "compiler" },
+    { "id": "types", "type": "backend", "label": "Trust Types", "sublabel": "5 provenance types", "pos": [420, 120], "size": [150, 58], "tag": "compiler" },
+    { "id": "semantic", "type": "backend", "label": "Semantic Analyzer", "sublabel": "DAG · cycles · skill registry", "pos": [440, 340], "size": [164, 58], "tag": "compiler" },
+    { "id": "compiler", "type": "backend", "label": "Compiler", "sublabel": "AST → Flow JSON", "pos": [660, 300], "size": [136, 58], "tag": "compiler" },
+    { "id": "formatter", "type": "backend", "label": "Formatter", "sublabel": "Canonical .tac", "pos": [440, 520], "size": [136, 58], "tag": "compiler" },
+    { "id": "flowjson", "type": "cloud", "label": "Flow JSON", "sublabel": "Executable definition", "pos": [880, 300], "size": [136, 58], "tag": "runtime" },
+    { "id": "flowengine", "type": "cloud", "label": "TacFlow Engine", "sublabel": "DAG orchestrator", "pos": [1100, 180], "size": [140, 58], "tag": "platform" },
+    { "id": "skills", "type": "cloud", "label": "Skill Registry", "sublabel": "24 built-in skills", "pos": [1100, 370], "size": [140, 58], "tag": "platform" },
+    { "id": "swarm", "type": "external", "label": "Agent Swarm", "sublabel": "Multi-agent execution", "pos": [1340, 280], "size": [138, 58], "tag": "platform" },
+    { "id": "memory", "type": "database", "label": "3-Layer Memory", "sublabel": "BM25 · Vector · Graph", "pos": [1340, 420], "size": [138, 58], "tag": "platform" }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "TAC Compiler (Go — single binary)", "wraps": ["lexer", "parser", "types", "semantic", "compiler", "formatter"], "pad": 22 },
+    { "kind": "region", "label": "TacFlow Platform", "wraps": ["flowjson", "flowengine", "skills", "swarm", "memory"], "pad": 18 }
+  ],
+  "connections": [
+    { "from": "source", "to": "lexer", "label": "Source text", "variant": "emphasis" },
+    { "from": "lexer", "to": "parser", "labelDy": 24, "label": "Token stream" },
+    { "from": "types", "to": "semantic", "label": "Type defs", "variant": "dashed" },
+    { "from": "parser", "to": "semantic", "label": "AST", "variant": "emphasis" },
+    { "from": "semantic", "to": "compiler", "labelAt": [605, 412], "label": "Validated AST", "variant": "emphasis" },
+    { "from": "parser", "to": "formatter", "label": "AST", "variant": "dashed" },
+    { "from": "compiler", "to": "flowjson", "label": "Flow JSON", "variant": "emphasis" },
+    { "from": "flowjson", "to": "flowengine", "label": "Execute" },
+    { "from": "flowengine", "to": "skills", "labelAt": [1170, 340], "label": "Resolve" },
+    { "from": "skills", "to": "swarm", "label": "Dispatch", "variant": "dashed" },
+    { "from": "swarm", "to": "memory", "labelAt": [1409, 370], "label": "Read/Write", "variant": "dashed" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Compilation Stages", "items": ["Lexer → Parser → Semantic → Compiler", "Source .tac → Token stream → AST → Flow JSON", "Comparison ops: > < >= <= == != <- ->", "Formatter: AST round-trip (canonical output)"] },
+    { "dot": "emerald", "title": "Trust Type System", "items": ["Secret: credentials — never logged", "Untrusted: user input — validate() before Fact", "Hallucinable: LLM output — verify() before Fact", "Control: runtime state — read-only"] },
+    { "dot": "amber", "title": "Built by TacFlow Architect", "items": ["Generated via Archify on TacFlow", "TacFlow Architect — AI Architect", "Repo: github.com/tacflow1-tech/tac-language", "Platform: tacflow.ai"] }
+  ]
+}

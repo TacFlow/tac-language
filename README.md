@@ -2,8 +2,37 @@
 
 > *"TAC is not a language for writing code. It is a language for thinking like an agent."*
 
-**TAC** is a domain-specific language (DSL) designed for **autonomous AI agents** within the TacFlow swarm ecosystem.  
+**TAC** is a domain-specific language (DSL) designed for **autonomous AI agents** within the TacFlow swarm ecosystem.
 It models how agents perceive, reason, remember, and execute tasks — as a **directed acyclic graph (DAG)** of skill invocations.
+
+---
+
+## 🏗️ Compiler Architecture
+
+> *Diagram built by **TacFlow Architect** — an AI agent in the TacFlow swarm — using **Archify** within the TacFlow platform.*
+
+```mermaid
+graph LR
+    subgraph "TAC Compiler (Go binary)"
+        direction LR
+        A[".tac Source"] --> B["Lexer<br/>(token stream)"]
+        B --> C["Parser<br/>(AST generation)"]
+        C --> D["Semantic Analyzer<br/>(DAG · cycles · skill registry)"]
+        D --> E["Compiler<br/>(AST → Flow JSON)"]
+        C -.-> F["Formatter<br/>(canonical .tac)"]
+        G["Trust Types<br/>(5 provenance types)"] -.-> D
+    end
+    subgraph "TacFlow Platform"
+        direction LR
+        E --> H["Flow JSON"]
+        H --> I["TacFlow Engine<br/>(DAG orchestrator)"]
+        I --> J["Skill Registry<br/>(24 built-in skills)"]
+        J --> K["Agent Swarm"]
+        K --> L[("3-Layer Memory<br/>BM25 · Vector · Graph")]
+    end
+```
+
+> **[🔍 View interactive architecture diagram](docs/tac-architecture.html)** — full interactive diagram with Dark/Light mode, zoom, multiple views, and export (built with Archify).
 
 ---
 
@@ -11,32 +40,31 @@ It models how agents perceive, reason, remember, and execute tasks — as a **di
 
 ```
 tac-language/
-├── SPEC.md                  # Full language specification (English)
-├── BENEFITS.md              # 10 strategic benefits of using TAC
-├── parser/
-│   ├── tac_parser.go        # Go parser — source code
-│   ├── go.mod               # Go module definition
-│   └── README.md            # Parser build & usage instructions
+├── SPEC.md                     # Full language specification (English)
+├── BENEFITS.md                 # 10 strategic benefits of using TAC
+├── cmd/
+│   ├── tac/main.go             # CLI: parse, compile, fmt, validate
+│   └── tac-parser/main.go      # Standalone parser CLI
+├── ast/ast.go                  # AST types (reusable across all packages)
+├── lexer/lexer.go              # Tokenizer (6 comparison + channel operators)
+├── parser/parser.go            # Modular parser (uses ast + lexer)
+├── semantic/analyzer.go        # Semantic analyzer (DAG, cycles, skill registry)
+├── types/types.go              # Trust type system (5 provenance types)
+├── compiler/compiler.go        # AST → Flow JSON compiler
+├── formatter/formatter.go      # Canonical .tac formatter (round-trip)
+├── manifest/manifest.go        # Flow manifest generator
 ├── examples/
-│   ├── web_qa.tac           # Web Q&A flow (parallel search + synthesis)
-│   ├── graph_builder.tac    # Knowledge graph builder from web pages
-│   └── multi_agent_review.tac # Multi-agent code review orchestrator
+│   ├── web_qa.tac              # Web Q&A flow (parallel search + synthesis)
+│   ├── graph_builder.tac       # Knowledge graph builder from web pages
+│   └── multi_agent_review.tac  # Multi-agent code review orchestrator
+├── testdata/                   # Golden file tests
 ├── docs/
-│   └── tac-lang-pipeline.html # Architecture diagram (Archify)
-├── LICENSE                  # MIT License
-├── README.md                # This file
+│   └── tac-architecture.html   # Interactive architecture diagram (Archify)
+├── tac_test.go                 # Test suite (17 tests + fuzz)
+├── LICENSE                     # MIT License
+├── README.md                   # This file
 └── .gitignore
 ```
-
-## 🏗️ Architecture
-
-The TAC execution pipeline transforms `.tac` source files into executable flows through 3 stages:
-
-```
-.tac Source → Parser (Go) → AST JSON → Compiler (Agent) → Flow JSON → Runtime → Memory + Training
-```
-
-📊 **[View Interactive Architecture Diagram →](docs/tac-lang-pipeline.html)**
 
 ---
 
@@ -49,28 +77,32 @@ git clone https://github.com/tacflow1-tech/tac-language.git
 cd tac-language
 ```
 
-### 2. Build the Parser
+### 2. Build
 
 ```bash
-cd parser
-go build -o tac-parser .
+go build -o tac ./cmd/tac
 ```
 
 ### 3. Parse a `.tac` File
 
 ```bash
 # Output AST to stdout
-./tac-parser ../examples/web_qa.tac
+./tac parse examples/web_qa.tac
 
-# Save AST to file
-./tac-parser ../examples/web_qa.tac --output ast.json
+# Compile to Flow JSON
+./tac compile examples/web_qa.tac
+
+# Format (canonical style)
+./tac fmt examples/web_qa.tac
+
+# Validate (semantic analysis)
+./tac validate examples/web_qa.tac
 ```
 
 ### 4. Inspect the AST
 
 ```bash
-# Pretty-print the flow structure
-./tac-parser ../examples/web_qa.tac | python3 -c "
+./tac parse examples/web_qa.tac | python3 -c "
 import json, sys
 ast = json.load(sys.stdin)
 for n in ast.get('nodes', []):
@@ -139,21 +171,16 @@ flow "Web Q&A" {
 
 ---
 
-## 🔧 Parser
-
-Written in **Go** (standard library only), the parser converts `.tac` source files into a structured JSON AST.
+## 🔧 Commands
 
 ```bash
-Usage: tac-parser <input.tac> [--output ast.json]
+tac parse <input.tac>        # Parse and print AST as JSON
+tac compile <input.tac>      # Parse, validate, and output Flow JSON
+tac fmt <input.tac>          # Format .tac source (canonical style)
+tac validate <input.tac>     # Parse and run semantic analysis
+tac version                  # Print version
+tac help                     # Show help
 ```
-
-See [`parser/README.md`](parser/README.md) for full build and usage instructions.
-
-### AST Node Types
-
-`Program` → `Flow` | `RememberStmt` | `RecallStmt` | `RelateStmt` | `ForgetStmt` | `ContextBlock` | `AutoSummarize`
-
-Each `Flow` contains: `Node` → `SkillCall` | `Edge` | `Trigger` | `Input` | `AgentDecl`
 
 ---
 
@@ -191,27 +218,27 @@ The full language specification is available in [`SPEC.md`](SPEC.md) (English, 1
 
 See [`BENEFITS.md`](BENEFITS.md) for the full analysis of the 10 strategic benefits of adopting TAC:
 
-1. **DSL Unificada** — One language for all agents
-2. **Auditoria Total** — Traceable from source to execution
-3. **Training Data Autogerado** — Every run feeds LoRA/QLoRA fine-tuning
-4. **Portabilidade entre Swarms** — Language-agnostic AST
-5. **Compile-time Safety** — Trust Types prevent data leaks
-6. **Otimização DAG** — Automatic parallelism, branch pruning
-7. **Memória 3 Camadas** — BM25 + Vector + Graph fusion
-8. **Marketplace de Skills** — Versioned, shareable skill packages
-9. **Simulação Pré-Execução** — Cost estimation before execution
-10. **Diferencial Competitivo** — Unique moat vs all competitors
+1. **Unified DSL** — One language for all agents
+2. **Total Auditability** — Traceable from source to execution
+3. **Auto-Generated Training Data** — Every run feeds LoRA/QLoRA fine-tuning
+4. **Cross-Swarm Portability** — Language-agnostic AST
+5. **Compile-Time Safety** — Trust Types prevent data leaks
+6. **DAG Optimization** — Automatic parallelism, branch pruning
+7. **3-Layer Memory** — BM25 + Vector + Graph fusion
+8. **Skill Marketplace** — Versioned, shareable skill packages
+9. **Pre-Execution Simulation** — Cost estimation before execution
+10. **Competitive Moat** — Unique differentiator vs all competitors
 
 ---
 
-## 🧪 Try It
+## 🧪 Test Suite
 
 ```bash
-# Clone, build, and parse
-git clone https://github.com/tacflow1-tech/tac-language.git
-cd tac-language/parser
-go build -o tac-parser .
-./tac-parser ../examples/web_qa.tac | jq '.'
+# Run all tests (17 tests + fuzz harness)
+go test ./...
+
+# Run fuzz testing (5 seconds)
+go test -fuzz=FuzzParser -fuzztime=5s .
 ```
 
 ---
@@ -226,7 +253,7 @@ Copyright (c) 2026 Tacflow
 
 ## 🏆 About TacFlow
 
-**TAC** is part of the **TacFlow** platform — an ecosystem of autonomous AI agents operating in swarms, sharing memory, skills, and reputation.  
+**TAC** is part of the **TacFlow** platform — an ecosystem of autonomous AI agents operating in swarms, sharing memory, skills, and reputation.
 Learn more at [tacflow.ai](https://tacflow.ai).
 
 ---

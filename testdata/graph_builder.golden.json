@@ -1,0 +1,470 @@
+{
+  "type": "Program",
+  "pos": {
+    "line": 1,
+    "col": 1
+  },
+  "nodes": [
+    {
+      "type": "Flow",
+      "pos": {
+        "line": 0,
+        "col": 0
+      },
+      "children": [
+        {
+          "type": "Input",
+          "pos": {
+            "line": 4,
+            "col": 8
+          },
+          "children": [
+            {
+              "type": "Identifier",
+              "pos": {
+                "line": 4,
+                "col": 12
+              },
+              "value": "url"
+            },
+            {
+              "type": "Identifier",
+              "pos": {
+                "line": 4,
+                "col": 23
+              },
+              "value": "Untrusted"
+            }
+          ]
+        },
+        {
+          "type": "Trigger",
+          "pos": {
+            "line": 29,
+            "col": 5
+          },
+          "children": [
+            {
+              "type": "StringLiteral",
+              "pos": {
+                "line": 29,
+                "col": 12
+              },
+              "value": "init"
+            },
+            {
+              "type": "Identifier",
+              "pos": {
+                "line": 29,
+                "col": 21
+              },
+              "value": "fetch"
+            }
+          ]
+        }
+      ],
+      "value": "Graph Builder",
+      "nodes": [
+        {
+          "type": "Node",
+          "pos": {
+            "line": 6,
+            "col": 7
+          },
+          "children": [
+            {
+              "type": "StringLiteral",
+              "pos": {
+                "line": 6,
+                "col": 15
+              },
+              "value": "fetch"
+            },
+            {
+              "type": "SkillCall",
+              "pos": {
+                "line": 6,
+                "col": 39
+              },
+              "value": "web_search",
+              "args": [
+                {
+                  "type": "NamedArg",
+                  "pos": {
+                    "line": 6,
+                    "col": 45
+                  },
+                  "children": [
+                    {
+                      "type": "Identifier",
+                      "pos": {
+                        "line": 6,
+                        "col": 50
+                      },
+                      "value": "url"
+                    }
+                  ],
+                  "value": "query"
+                },
+                {
+                  "type": "NamedArg",
+                  "pos": {
+                    "line": 6,
+                    "col": 57
+                  },
+                  "children": [
+                    {
+                      "type": "NumberLiteral",
+                      "pos": {
+                        "line": 6,
+                        "col": 60
+                      },
+                      "value": "1",
+                      "num_val": 1
+                    }
+                  ],
+                  "value": "count"
+                }
+              ]
+            }
+          ],
+          "value": "fetch"
+        },
+        {
+          "type": "Node",
+          "pos": {
+            "line": 7,
+            "col": 7
+          },
+          "children": [
+            {
+              "type": "StringLiteral",
+              "pos": {
+                "line": 7,
+                "col": 17
+              },
+              "value": "extract"
+            },
+            {
+              "type": "SkillCall",
+              "pos": {
+                "line": 7,
+                "col": 37
+              },
+              "value": "llm.chat",
+              "args": [
+                {
+                  "type": "NamedArg",
+                  "pos": {
+                    "line": 8,
+                    "col": 11
+                  },
+                  "children": [
+                    {
+                      "type": "StringLiteral",
+                      "pos": {
+                        "line": 8,
+                        "col": 68
+                      },
+                      "value": "Extract key concepts and relationships from this text"
+                    }
+                  ],
+                  "value": "prompt"
+                },
+                {
+                  "type": "NamedArg",
+                  "pos": {
+                    "line": 9,
+                    "col": 12
+                  },
+                  "children": [
+                    {
+                      "type": "Identifier",
+                      "pos": {
+                        "line": 9,
+                        "col": 26
+                      },
+                      "value": "fetch.result"
+                    }
+                  ],
+                  "value": "context"
+                }
+              ]
+            }
+          ],
+          "value": "extract"
+        },
+        {
+          "type": "Node",
+          "pos": {
+            "line": 11,
+            "col": 7
+          },
+          "children": [
+            {
+              "type": "StringLiteral",
+              "pos": {
+                "line": 11,
+                "col": 21
+              },
+              "value": "store_nodes"
+            },
+            {
+              "type": "SkillCall",
+              "pos": {
+                "line": 11,
+                "col": 43
+              },
+              "value": "memory_store",
+              "args": [
+                {
+                  "type": "NamedArg",
+                  "pos": {
+                    "line": 12,
+                    "col": 9
+                  },
+                  "children": [
+                    {
+                      "type": "Identifier",
+                      "pos": {
+                        "line": 12,
+                        "col": 34
+                      },
+                      "value": "extract.result.concepts"
+                    }
+                  ],
+                  "value": "text"
+                },
+                {
+                  "type": "NamedArg",
+                  "pos": {
+                    "line": 13,
+                    "col": 9
+                  },
+                  "children": [
+                    {
+                      "type": "ArrayLiteral",
+                      "pos": {
+                        "line": 13,
+                        "col": 12
+                      },
+                      "arr_val": [
+                        {
+                          "type": "StringLiteral",
+                          "pos": {
+                            "line": 13,
+                            "col": 21
+                          },
+                          "value": "concept"
+                        },
+                        {
+                          "type": "Identifier",
+                          "pos": {
+                            "line": 13,
+                            "col": 30
+                          },
+                          "value": "url.tag"
+                        }
+                      ]
+                    }
+                  ],
+                  "value": "tags"
+                }
+              ]
+            }
+          ],
+          "value": "store_nodes"
+        },
+        {
+          "type": "Node",
+          "pos": {
+            "line": 15,
+            "col": 7
+          },
+          "children": [
+            {
+              "type": "StringLiteral",
+              "pos": {
+                "line": 15,
+                "col": 22
+              },
+              "value": "relate_nodes"
+            }
+          ],
+          "value": "relate_nodes",
+          "nodes": [
+            {
+              "type": "Identifier",
+              "pos": {
+                "line": 16,
+                "col": 8
+              },
+              "children": [
+                {
+                  "type": "Identifier",
+                  "pos": {
+                    "line": 16,
+                    "col": 26
+                  },
+                  "value": "relationship"
+                },
+                {
+                  "type": "Identifier",
+                  "pos": {
+                    "line": 16,
+                    "col": 58
+                  },
+                  "value": "extract.result.relationships"
+                }
+              ],
+              "value": "for_each",
+              "nodes": [
+                {
+                  "type": "SkillCall",
+                  "pos": {
+                    "line": 17,
+                    "col": 25
+                  },
+                  "value": "graph_relate",
+                  "args": [
+                    {
+                      "type": "NamedArg",
+                      "pos": {
+                        "line": 18,
+                        "col": 15
+                      },
+                      "children": [
+                        {
+                          "type": "Identifier",
+                          "pos": {
+                            "line": 18,
+                            "col": 34
+                          },
+                          "value": "relationship.from"
+                        }
+                      ],
+                      "value": "source"
+                    },
+                    {
+                      "type": "NamedArg",
+                      "pos": {
+                        "line": 19,
+                        "col": 15
+                      },
+                      "children": [
+                        {
+                          "type": "Identifier",
+                          "pos": {
+                            "line": 19,
+                            "col": 32
+                          },
+                          "value": "relationship.to"
+                        }
+                      ],
+                      "value": "target"
+                    },
+                    {
+                      "type": "NamedArg",
+                      "pos": {
+                        "line": 20,
+                        "col": 13
+                      },
+                      "children": [
+                        {
+                          "type": "Identifier",
+                          "pos": {
+                            "line": 20,
+                            "col": 32
+                          },
+                          "value": "relationship.type"
+                        }
+                      ],
+                      "value": "type"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "type": "Edge",
+          "pos": {
+            "line": 25,
+            "col": 8
+          },
+          "children": [
+            {
+              "type": "Identifier",
+              "pos": {
+                "line": 25,
+                "col": 8
+              },
+              "value": "fetch"
+            },
+            {
+              "type": "Identifier",
+              "pos": {
+                "line": 25,
+                "col": 19
+              },
+              "value": "extract"
+            }
+          ]
+        },
+        {
+          "type": "Edge",
+          "pos": {
+            "line": 26,
+            "col": 10
+          },
+          "children": [
+            {
+              "type": "Identifier",
+              "pos": {
+                "line": 26,
+                "col": 10
+              },
+              "value": "extract"
+            },
+            {
+              "type": "Identifier",
+              "pos": {
+                "line": 26,
+                "col": 25
+              },
+              "value": "store_nodes"
+            }
+          ]
+        },
+        {
+          "type": "Edge",
+          "pos": {
+            "line": 27,
+            "col": 10
+          },
+          "children": [
+            {
+              "type": "Identifier",
+              "pos": {
+                "line": 27,
+                "col": 10
+              },
+              "value": "extract"
+            },
+            {
+              "type": "Identifier",
+              "pos": {
+                "line": 27,
+                "col": 26
+              },
+              "value": "relate_nodes"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

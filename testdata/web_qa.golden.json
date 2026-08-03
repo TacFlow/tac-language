@@ -1,0 +1,798 @@
+{
+  "type": "Program",
+  "pos": {
+    "line": 1,
+    "col": 1
+  },
+  "nodes": [
+    {
+      "type": "Flow",
+      "pos": {
+        "line": 0,
+        "col": 0
+      },
+      "children": [
+        {
+          "type": "Input",
+          "pos": {
+            "line": 4,
+            "col": 8
+          },
+          "children": [
+            {
+              "type": "Identifier",
+              "pos": {
+                "line": 4,
+                "col": 17
+              },
+              "value": "question"
+            },
+            {
+              "type": "Identifier",
+              "pos": {
+                "line": 4,
+                "col": 28
+              },
+              "value": "Untrusted"
+            }
+          ]
+        },
+        {
+          "type": "Trigger",
+          "pos": {
+            "line": 48,
+            "col": 5
+          },
+          "children": [
+            {
+              "type": "StringLiteral",
+              "pos": {
+                "line": 48,
+                "col": 20
+              },
+              "value": "user_message"
+            },
+            {
+              "type": "Identifier",
+              "pos": {
+                "line": 48,
+                "col": 34
+              },
+              "value": "search_web"
+            }
+          ]
+        }
+      ],
+      "value": "Web Q\u0026A",
+      "nodes": [
+        {
+          "type": "Node",
+          "pos": {
+            "line": 7,
+            "col": 7
+          },
+          "children": [
+            {
+              "type": "StringLiteral",
+              "pos": {
+                "line": 7,
+                "col": 20
+              },
+              "value": "search_web"
+            },
+            {
+              "type": "SkillCall",
+              "pos": {
+                "line": 7,
+                "col": 43
+              },
+              "value": "web_search",
+              "args": [
+                {
+                  "type": "NamedArg",
+                  "pos": {
+                    "line": 7,
+                    "col": 49
+                  },
+                  "children": [
+                    {
+                      "type": "Identifier",
+                      "pos": {
+                        "line": 7,
+                        "col": 59
+                      },
+                      "value": "question"
+                    }
+                  ],
+                  "value": "query"
+                },
+                {
+                  "type": "NamedArg",
+                  "pos": {
+                    "line": 7,
+                    "col": 66
+                  },
+                  "children": [
+                    {
+                      "type": "NumberLiteral",
+                      "pos": {
+                        "line": 7,
+                        "col": 69
+                      },
+                      "value": "3",
+                      "num_val": 3
+                    }
+                  ],
+                  "value": "count"
+                }
+              ]
+            }
+          ],
+          "value": "search_web"
+        },
+        {
+          "type": "Node",
+          "pos": {
+            "line": 8,
+            "col": 7
+          },
+          "children": [
+            {
+              "type": "StringLiteral",
+              "pos": {
+                "line": 8,
+                "col": 23
+              },
+              "value": "search_memory"
+            },
+            {
+              "type": "SkillCall",
+              "pos": {
+                "line": 8,
+                "col": 46
+              },
+              "value": "memory_search",
+              "args": [
+                {
+                  "type": "NamedArg",
+                  "pos": {
+                    "line": 8,
+                    "col": 52
+                  },
+                  "children": [
+                    {
+                      "type": "Identifier",
+                      "pos": {
+                        "line": 8,
+                        "col": 62
+                      },
+                      "value": "question"
+                    }
+                  ],
+                  "value": "query"
+                },
+                {
+                  "type": "NamedArg",
+                  "pos": {
+                    "line": 8,
+                    "col": 69
+                  },
+                  "children": [
+                    {
+                      "type": "StringLiteral",
+                      "pos": {
+                        "line": 8,
+                        "col": 79
+                      },
+                      "value": "shared"
+                    }
+                  ],
+                  "value": "scope"
+                }
+              ]
+            }
+          ],
+          "value": "search_memory"
+        },
+        {
+          "type": "Node",
+          "pos": {
+            "line": 9,
+            "col": 7
+          },
+          "children": [
+            {
+              "type": "StringLiteral",
+              "pos": {
+                "line": 9,
+                "col": 22
+              },
+              "value": "search_graph"
+            },
+            {
+              "type": "SkillCall",
+              "pos": {
+                "line": 9,
+                "col": 45
+              },
+              "value": "graph_search",
+              "args": [
+                {
+                  "type": "NamedArg",
+                  "pos": {
+                    "line": 9,
+                    "col": 51
+                  },
+                  "children": [
+                    {
+                      "type": "Identifier",
+                      "pos": {
+                        "line": 9,
+                        "col": 61
+                      },
+                      "value": "question"
+                    }
+                  ],
+                  "value": "query"
+                },
+                {
+                  "type": "NamedArg",
+                  "pos": {
+                    "line": 9,
+                    "col": 68
+                  },
+                  "children": [
+                    {
+                      "type": "NumberLiteral",
+                      "pos": {
+                        "line": 9,
+                        "col": 71
+                      },
+                      "value": "2",
+                      "num_val": 2
+                    }
+                  ],
+                  "value": "depth"
+                }
+              ]
+            }
+          ],
+          "value": "search_graph"
+        },
+        {
+          "type": "Node",
+          "pos": {
+            "line": 12,
+            "col": 7
+          },
+          "children": [
+            {
+              "type": "StringLiteral",
+              "pos": {
+                "line": 12,
+                "col": 20
+              },
+              "value": "synthesize"
+            },
+            {
+              "type": "SkillCall",
+              "pos": {
+                "line": 12,
+                "col": 38
+              },
+              "value": "llm.chat",
+              "args": [
+                {
+                  "type": "NamedArg",
+                  "pos": {
+                    "line": 13,
+                    "col": 11
+                  },
+                  "children": [
+                    {
+                      "type": "StringLiteral",
+                      "pos": {
+                        "line": 13,
+                        "col": 67
+                      },
+                      "value": "Use these sources to answer the question accurately:"
+                    }
+                  ],
+                  "value": "prompt"
+                },
+                {
+                  "type": "NamedArg",
+                  "pos": {
+                    "line": 14,
+                    "col": 12
+                  },
+                  "children": [
+                    {
+                      "type": "ArrayLiteral",
+                      "pos": {
+                        "line": 14,
+                        "col": 15
+                      },
+                      "arr_val": [
+                        {
+                          "type": "Identifier",
+                          "pos": {
+                            "line": 14,
+                            "col": 32
+                          },
+                          "value": "search_web.result"
+                        },
+                        {
+                          "type": "Identifier",
+                          "pos": {
+                            "line": 14,
+                            "col": 54
+                          },
+                          "value": "search_memory.result"
+                        },
+                        {
+                          "type": "Identifier",
+                          "pos": {
+                            "line": 14,
+                            "col": 75
+                          },
+                          "value": "search_graph.result"
+                        }
+                      ]
+                    }
+                  ],
+                  "value": "context"
+                }
+              ]
+            }
+          ],
+          "value": "synthesize"
+        },
+        {
+          "type": "Node",
+          "pos": {
+            "line": 18,
+            "col": 7
+          },
+          "children": [
+            {
+              "type": "StringLiteral",
+              "pos": {
+                "line": 18,
+                "col": 16
+              },
+              "value": "verify"
+            },
+            {
+              "type": "SkillCall",
+              "pos": {
+                "line": 18,
+                "col": 32
+              },
+              "value": "verify",
+              "args": [
+                {
+                  "type": "NamedArg",
+                  "pos": {
+                    "line": 18,
+                    "col": 39
+                  },
+                  "children": [
+                    {
+                      "type": "Identifier",
+                      "pos": {
+                        "line": 18,
+                        "col": 58
+                      },
+                      "value": "synthesize.result"
+                    }
+                  ],
+                  "value": "source"
+                }
+              ]
+            }
+          ],
+          "value": "verify"
+        },
+        {
+          "type": "Node",
+          "pos": {
+            "line": 21,
+            "col": 7
+          },
+          "children": [
+            {
+              "type": "StringLiteral",
+              "pos": {
+                "line": 21,
+                "col": 15
+              },
+              "value": "speak"
+            }
+          ],
+          "value": "speak",
+          "nodes": [
+            {
+              "type": "Condition",
+              "pos": {
+                "line": 22,
+                "col": 7
+              },
+              "children": [
+                {
+                  "type": "Identifier",
+                  "pos": {
+                    "line": 22,
+                    "col": 7
+                  },
+                  "value": "verify.confidence \u003e 0.8"
+                }
+              ],
+              "value": "if",
+              "nodes": [
+                {
+                  "type": "SkillCall",
+                  "pos": {
+                    "line": 23,
+                    "col": 22
+                  },
+                  "value": "tts.speak",
+                  "args": [
+                    {
+                      "type": "NamedArg",
+                      "pos": {
+                        "line": 23,
+                        "col": 27
+                      },
+                      "children": [
+                        {
+                          "type": "Identifier",
+                          "pos": {
+                            "line": 23,
+                            "col": 46
+                          },
+                          "value": "synthesize.result"
+                        }
+                      ],
+                      "value": "text"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "Condition",
+              "pos": {
+                "line": 24,
+                "col": 11
+              },
+              "value": "else",
+              "nodes": [
+                {
+                  "type": "SkillCall",
+                  "pos": {
+                    "line": 25,
+                    "col": 22
+                  },
+                  "value": "tts.speak",
+                  "args": [
+                    {
+                      "type": "NamedArg",
+                      "pos": {
+                        "line": 25,
+                        "col": 27
+                      },
+                      "children": [
+                        {
+                          "type": "StringLiteral",
+                          "pos": {
+                            "line": 25,
+                            "col": 92
+                          },
+                          "value": "I am not confident enough to answer this question accurately."
+                        }
+                      ],
+                      "value": "text"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "Node",
+          "pos": {
+            "line": 30,
+            "col": 7
+          },
+          "children": [
+            {
+              "type": "StringLiteral",
+              "pos": {
+                "line": 30,
+                "col": 15
+              },
+              "value": "learn"
+            }
+          ],
+          "value": "learn",
+          "nodes": [
+            {
+              "type": "Condition",
+              "pos": {
+                "line": 31,
+                "col": 7
+              },
+              "children": [
+                {
+                  "type": "Identifier",
+                  "pos": {
+                    "line": 31,
+                    "col": 7
+                  },
+                  "value": "verify.confidence \u003e 0.9"
+                }
+              ],
+              "value": "if",
+              "nodes": [
+                {
+                  "type": "SkillCall",
+                  "pos": {
+                    "line": 32,
+                    "col": 25
+                  },
+                  "value": "memory_store",
+                  "args": [
+                    {
+                      "type": "NamedArg",
+                      "pos": {
+                        "line": 33,
+                        "col": 13
+                      },
+                      "children": [
+                        {
+                          "type": "Identifier",
+                          "pos": {
+                            "line": 33,
+                            "col": 32
+                          },
+                          "value": "synthesize.result"
+                        }
+                      ],
+                      "value": "text"
+                    },
+                    {
+                      "type": "NamedArg",
+                      "pos": {
+                        "line": 34,
+                        "col": 13
+                      },
+                      "children": [
+                        {
+                          "type": "ArrayLiteral",
+                          "pos": {
+                            "line": 34,
+                            "col": 16
+                          },
+                          "arr_val": [
+                            {
+                              "type": "StringLiteral",
+                              "pos": {
+                                "line": 34,
+                                "col": 20
+                              },
+                              "value": "qa"
+                            },
+                            {
+                              "type": "StringLiteral",
+                              "pos": {
+                                "line": 34,
+                                "col": 32
+                              },
+                              "value": "verified"
+                            },
+                            {
+                              "type": "Identifier",
+                              "pos": {
+                                "line": 34,
+                                "col": 46
+                              },
+                              "value": "question.tag"
+                            }
+                          ]
+                        }
+                      ],
+                      "value": "tags"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "type": "Edge",
+          "pos": {
+            "line": 40,
+            "col": 13
+          },
+          "children": [
+            {
+              "type": "Identifier",
+              "pos": {
+                "line": 40,
+                "col": 13
+              },
+              "value": "search_web"
+            },
+            {
+              "type": "Identifier",
+              "pos": {
+                "line": 40,
+                "col": 30
+              },
+              "value": "synthesize"
+            }
+          ]
+        },
+        {
+          "type": "Edge",
+          "pos": {
+            "line": 41,
+            "col": 16
+          },
+          "children": [
+            {
+              "type": "Identifier",
+              "pos": {
+                "line": 41,
+                "col": 16
+              },
+              "value": "search_memory"
+            },
+            {
+              "type": "Identifier",
+              "pos": {
+                "line": 41,
+                "col": 30
+              },
+              "value": "synthesize"
+            }
+          ]
+        },
+        {
+          "type": "Edge",
+          "pos": {
+            "line": 42,
+            "col": 15
+          },
+          "children": [
+            {
+              "type": "Identifier",
+              "pos": {
+                "line": 42,
+                "col": 15
+              },
+              "value": "search_graph"
+            },
+            {
+              "type": "Identifier",
+              "pos": {
+                "line": 42,
+                "col": 30
+              },
+              "value": "synthesize"
+            }
+          ]
+        },
+        {
+          "type": "Edge",
+          "pos": {
+            "line": 43,
+            "col": 13
+          },
+          "children": [
+            {
+              "type": "Identifier",
+              "pos": {
+                "line": 43,
+                "col": 13
+              },
+              "value": "synthesize"
+            },
+            {
+              "type": "Identifier",
+              "pos": {
+                "line": 43,
+                "col": 26
+              },
+              "value": "verify"
+            }
+          ]
+        },
+        {
+          "type": "Edge",
+          "pos": {
+            "line": 44,
+            "col": 9
+          },
+          "children": [
+            {
+              "type": "Identifier",
+              "pos": {
+                "line": 44,
+                "col": 9
+              },
+              "value": "verify"
+            },
+            {
+              "type": "Identifier",
+              "pos": {
+                "line": 44,
+                "col": 25
+              },
+              "value": "speak"
+            }
+          ]
+        },
+        {
+          "type": "Edge",
+          "pos": {
+            "line": 45,
+            "col": 9
+          },
+          "children": [
+            {
+              "type": "Identifier",
+              "pos": {
+                "line": 45,
+                "col": 9
+              },
+              "value": "verify"
+            },
+            {
+              "type": "Identifier",
+              "pos": {
+                "line": 45,
+                "col": 25
+              },
+              "value": "learn"
+            }
+          ],
+          "attrs": {
+            "if": {
+              "type": "Condition",
+              "pos": {
+                "line": 45,
+                "col": 52
+              },
+              "children": [
+                {
+                  "type": "Identifier",
+                  "pos": {
+                    "line": 45,
+                    "col": 50
+                  },
+                  "value": "verify.confidence"
+                },
+                {
+                  "type": "NumberLiteral",
+                  "pos": {
+                    "line": 45,
+                    "col": 56
+                  },
+                  "value": "0.9",
+                  "num_val": 0.9
+                }
+              ],
+              "value": "\u003e"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
