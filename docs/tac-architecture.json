@@ -55,6 +55,6 @@
   "cards": [
     { "dot": "cyan", "title": "Compilation Stages", "items": ["Lexer → Parser → Semantic → Compiler", "Source .tac → Token stream → AST → Flow JSON", "Comparison ops: > < >= <= == != <- ->", "Formatter: AST round-trip (canonical output)"] },
     { "dot": "emerald", "title": "Trust Type System", "items": ["Secret: credentials — never logged", "Untrusted: user input — validate() before Fact", "Hallucinable: LLM output — verify() before Fact", "Control: runtime state — read-only"] },
-    { "dot": "amber", "title": "Built by TacFlow Architect", "items": ["Generated via Archify on TacFlow", "TacFlow Architect — AI Architect", "Repo: github.com/tacflow1-tech/tac-language", "Platform: tacflow.ai"] }
+    { "dot": "amber", "title": "Built by TacFlow Architect", "items": ["Generated via Archify on TacFlow", "TacFlow Architect — AI Architect", "Repo: github.com/TacFlow/tac-language", "Platform: tacflow.ai"] }
   ]
 }

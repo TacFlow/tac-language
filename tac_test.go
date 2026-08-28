@@ -7,13 +7,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/tacflow1-tech/tac-language/ast"
-	"github.com/tacflow1-tech/tac-language/formatter"
-	"github.com/tacflow1-tech/tac-language/lexer"
-	"github.com/tacflow1-tech/tac-language/manifest"
-	"github.com/tacflow1-tech/tac-language/parser"
-	"github.com/tacflow1-tech/tac-language/semantic"
-	"github.com/tacflow1-tech/tac-language/types"
+	"github.com/TacFlow/tac-language/ast"
+	"github.com/TacFlow/tac-language/formatter"
+	"github.com/TacFlow/tac-language/lexer"
+	"github.com/TacFlow/tac-language/manifest"
+	"github.com/TacFlow/tac-language/parser"
+	"github.com/TacFlow/tac-language/semantic"
+	"github.com/TacFlow/tac-language/types"
 )
 
 // ============================================================================

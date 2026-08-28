@@ -7,12 +7,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/tacflow1-tech/tac-language/compiler"
-	"github.com/tacflow1-tech/tac-language/formatter"
-	"github.com/tacflow1-tech/tac-language/lexer"
-	"github.com/tacflow1-tech/tac-language/parser"
-	"github.com/tacflow1-tech/tac-language/semantic"
-	"github.com/tacflow1-tech/tac-language/types"
+	"github.com/TacFlow/tac-language/compiler"
+	"github.com/TacFlow/tac-language/formatter"
+	"github.com/TacFlow/tac-language/lexer"
+	"github.com/TacFlow/tac-language/parser"
+	"github.com/TacFlow/tac-language/semantic"
+	"github.com/TacFlow/tac-language/types"
 )
 
 func readExampleFile(name string) (string, error) {

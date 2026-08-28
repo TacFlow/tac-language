@@ -22,8 +22,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/tacflow1-tech/tac-language/ast"
-	"github.com/tacflow1-tech/tac-language/lexer"
+	"github.com/TacFlow/tac-language/ast"
+	"github.com/TacFlow/tac-language/lexer"
 )
 
 // Parser converts a token stream into an AST.

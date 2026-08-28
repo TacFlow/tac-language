@@ -14,7 +14,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/tacflow1-tech/tac-language/ast"
+	"github.com/TacFlow/tac-language/ast"
 )
 
 // Options controls formatter behavior.

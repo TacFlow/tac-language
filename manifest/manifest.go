@@ -8,8 +8,8 @@ package manifest
 import (
 	"sort"
 
-	"github.com/tacflow1-tech/tac-language/ast"
-	"github.com/tacflow1-tech/tac-language/types"
+	"github.com/TacFlow/tac-language/ast"
+	"github.com/TacFlow/tac-language/types"
 )
 
 // Manifest describes the metadata and dependencies of a TAC flow.

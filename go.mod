@@ -1,3 +1,3 @@
-module github.com/tacflow1-tech/tac-language
+module github.com/TacFlow/tac-language
 
 go 1.25

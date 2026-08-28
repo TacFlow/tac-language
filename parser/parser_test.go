@@ -3,7 +3,7 @@ package parser
 import (
 	"testing"
 
-	"github.com/tacflow1-tech/tac-language/ast"
+	"github.com/TacFlow/tac-language/ast"
 )
 
 func TestParseSimpleFlow(t *testing.T) {

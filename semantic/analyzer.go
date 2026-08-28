@@ -21,8 +21,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/tacflow1-tech/tac-language/ast"
-	"github.com/tacflow1-tech/tac-language/types"
+	"github.com/TacFlow/tac-language/ast"
+	"github.com/TacFlow/tac-language/types"
 )
 
 // Severity represents the severity of a semantic diagnostic.

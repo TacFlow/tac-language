@@ -17,8 +17,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/tacflow1-tech/tac-language/parser"
-	"github.com/tacflow1-tech/tac-language/semantic"
+	"github.com/TacFlow/tac-language/parser"
+	"github.com/TacFlow/tac-language/semantic"
 )
 
 func main() {

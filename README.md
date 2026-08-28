@@ -82,7 +82,7 @@ tac-language/
 ### 1. Clone
 
 ```bash
-git clone https://github.com/tacflow1-tech/tac-language.git
+git clone https://github.com/TacFlow/tac-language.git
 cd tac-language
 ```
 

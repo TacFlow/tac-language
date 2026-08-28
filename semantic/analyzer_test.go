@@ -3,7 +3,7 @@ package semantic
 import (
 	"testing"
 
-	"github.com/tacflow1-tech/tac-language/parser"
+	"github.com/TacFlow/tac-language/parser"
 )
 
 func TestAnalyze_ValidFlow(t *testing.T) {

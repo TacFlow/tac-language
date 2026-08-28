@@ -19,11 +19,11 @@ import (
 	"os"
 	"sort"
 
-	"github.com/tacflow1-tech/tac-language/ast"
-	"github.com/tacflow1-tech/tac-language/compiler"
-	"github.com/tacflow1-tech/tac-language/formatter"
-	"github.com/tacflow1-tech/tac-language/parser"
-	"github.com/tacflow1-tech/tac-language/semantic"
+	"github.com/TacFlow/tac-language/ast"
+	"github.com/TacFlow/tac-language/compiler"
+	"github.com/TacFlow/tac-language/formatter"
+	"github.com/TacFlow/tac-language/parser"
+	"github.com/TacFlow/tac-language/semantic"
 )
 
 const version     = "0.3.0"

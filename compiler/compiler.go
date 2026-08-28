@@ -11,9 +11,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/tacflow1-tech/tac-language/ast"
-	"github.com/tacflow1-tech/tac-language/manifest"
-	"github.com/tacflow1-tech/tac-language/semantic"
+	"github.com/TacFlow/tac-language/ast"
+	"github.com/TacFlow/tac-language/manifest"
+	"github.com/TacFlow/tac-language/semantic"
 )
 
 // FlowJSON is the output format consumed by the TacFlow flow engine.

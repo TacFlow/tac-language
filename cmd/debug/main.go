@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/tacflow1-tech/tac-language/ast"
-	"github.com/tacflow1-tech/tac-language/parser"
+	"github.com/TacFlow/tac-language/ast"
+	"github.com/TacFlow/tac-language/parser"
 )
 
 func main() {

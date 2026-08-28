@@ -3,7 +3,7 @@ package manifest
 import (
 	"testing"
 
-	"github.com/tacflow1-tech/tac-language/parser"
+	"github.com/TacFlow/tac-language/parser"
 )
 
 func TestExtractManifest(t *testing.T) {
