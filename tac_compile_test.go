@@ -338,7 +338,7 @@ func TestVersionMetadata(t *testing.T) {
 		t.Fatal("no flows")
 	}
 	meta := flows[0].Language
-	if meta.Name != "TAC" || meta.LanguageVersion != "0.3" || meta.IRVersion != "1.1" {
+	if meta.Name != "TAC" || meta.LanguageVersion != "0.4" || meta.IRVersion != "1.1" {
 		t.Errorf("version mismatch: name=%q lang=%q ir=%q", meta.Name, meta.LanguageVersion, meta.IRVersion)
 	}
 }
@@ -618,13 +618,13 @@ func TestFlowIRHasEnhancedMetadata(t *testing.T) {
 		t.Fatal("no flows")
 	}
 	fj := flows[0]
-	if fj.Language.CompilerVersion != "0.3.0" {
+	if fj.Language.CompilerVersion != "0.4.0" {
 		t.Errorf("compiler version: %s", fj.Language.CompilerVersion)
 	}
 	if fj.Language.IRVersion != "1.1" {
 		t.Errorf("ir version: %s", fj.Language.IRVersion)
 	}
-	if fj.Language.LanguageVersion != "0.3" {
+	if fj.Language.LanguageVersion != "0.4" {
 		t.Errorf("language version: %s", fj.Language.LanguageVersion)
 	}
 }

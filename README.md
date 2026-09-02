@@ -64,7 +64,8 @@ tac-language/
 ├── examples/
 │   ├── web_qa.tac              # Web Q&A flow (parallel search + synthesis)
 │   ├── graph_builder.tac       # Knowledge graph builder from web pages
-│   └── multi_agent_review.tac  # Multi-agent code review orchestrator
+│   ├── multi_agent_review.tac  # Multi-agent code review orchestrator
+│   └── typed_inputs.tac        # Value types + trust types on declared inputs
 ├── testdata/                   # Golden file tests
 ├── docs/
 │   ├── tac-lang-pipeline.html   # 3-stage pipeline diagram (Archify)
@@ -148,6 +149,9 @@ for n in ast.get('nodes', []):
 
 ### Trust Types
 
+Trust types model **provenance** — where a value came from and how far it may
+be relied upon. They are what the dataflow analyzer enforces.
+
 | Type | Origin | Behavior |
 |------|--------|----------|
 | `Secret` | Credentials | Never echoed or logged |
@@ -155,6 +159,22 @@ for n in ast.get('nodes', []):
 | `Fact` | Verified memory | High confidence |
 | `Hallucinable` | LLM output | Must be fact-checked |
 | `Control` | Runtime state | Read-only |
+
+### Value Types (v0.4.0)
+
+Value types model **shape**. An `input`'s type slot accepts either kind:
+
+```tac
+input question: Untrusted     // provenance — validate before use
+input max_results: integer    // shape — a whole number, not prose
+```
+
+`string` · `integer` · `number` · `boolean` · `list` · `object`
+
+They are declarative and constrain declarations only — no runtime coercion, no
+variables, no expressions. An unrecognised type name means "unconstrained" and
+warns; it is never an error, so source written against a newer or
+dialect-extended TAC keeps compiling. See [`SPEC.md`](SPEC.md) §5.2.
 
 ### Example: Web Q&A Flow
 
@@ -200,6 +220,7 @@ tac help                     # Show help
 | [`examples/web_qa.tac`](examples/web_qa.tac) | Parallel search (web + memory + graph), synthesis, fact-check, speak |
 | [`examples/graph_builder.tac`](examples/graph_builder.tac) | Extract concepts from a URL, build knowledge graph with relationships |
 | [`examples/multi_agent_review.tac`](examples/multi_agent_review.tac) | Spawn 3 reviewer agents in parallel, consolidate results |
+| [`examples/typed_inputs.tac`](examples/typed_inputs.tac) | Value types and trust types on one flow's declared inputs |
 
 ---
 

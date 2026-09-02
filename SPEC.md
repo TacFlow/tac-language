@@ -344,9 +344,26 @@ auto_summarize(on: "overflow" | "manual", strategy: "concise" | "detailed")
 
 ---
 
-## 5. Types System — Trust Types
+## 5. Types System — Trust Types and Value Types
 
-TAC does not have traditional data types (`int`, `string`). Instead, it has **trust types** that model the provenance and safety of data.
+TAC has two type systems that answer different questions and coexist in one
+declaration slot.
+
+**Trust types** model the *provenance* of data — where a value came from and
+how far it may be relied upon. They are TAC's original and primary type system,
+and the one the dataflow analyzer enforces (§5.1).
+
+**Value types** (added in v0.4.0) model the *shape* of a declared input — that
+`max_results` is a whole number rather than prose. They are declarative: they
+document what a trigger or an embedding host must supply, so a toolchain can
+reject a mismatch before a flow runs rather than midway through it.
+
+Neither replaces the other, and neither can catch what the other catches. A
+trust type will not notice a string passed where an integer was meant; a value
+type will not notice unverified LLM output flowing into a store that requires
+verified fact. See `examples/typed_inputs.tac`, where removing one `verify()`
+node produces `TAC-TRUST-001` while every value type still checks out.
+
 
 ### 5.1 Built-in Trust Types
 
@@ -358,7 +375,48 @@ TAC does not have traditional data types (`int`, `string`). Instead, it has **tr
 | `Hallucinable` | LLM output | May contain false information, must be verified |
 | `Control` | Flow engine, internal state | Read-only at agent level |
 
-### 5.2 Implicit Type Inference
+### 5.2 Value Types
+
+An `input` declaration's type slot accepts either a trust type or a value type:
+
+```tac
+flow "Search And Summarize" {
+  input question: Untrusted        // trust type — provenance
+  input max_results: integer       // value type — shape
+  input include_sources: boolean   // value type — shape
+}
+```
+
+The value types are:
+
+| Type | Accepts |
+|------|---------|
+| `string` | text |
+| `integer` | a whole number |
+| `number` | any number, integral or not |
+| `boolean` | `true` / `false` |
+| `list` | an ordered sequence |
+| `object` | a set of named fields |
+
+Three rules govern the slot:
+
+1. **One type per input.** The slot holds a trust type or a value type, not
+   both. An input that needs provenance tracking should carry its trust type;
+   an input whose shape matters more should carry its value type. Allowing both
+   on one declaration is left to a future revision.
+2. **An absent type means "unconstrained".** `input target` is valid and
+   places no requirement on the value.
+3. **An unrecognised type name means "unconstrained", with a warning.** A
+   toolchain that does not know a name must not reject the flow — source
+   written against a newer or dialect-extended TAC has to keep compiling. This
+   rule is what lets `input q: Untrusted` and `input q: string` pass through
+   the same implementations without either becoming a hard error.
+
+Value types constrain *declarations only*. They do not change how a skill is
+invoked, they add no runtime coercion, and they do not introduce variables,
+expressions, or arithmetic to the language.
+
+### 5.3 Implicit Type Inference
 
 ```
 // User input
@@ -374,7 +432,7 @@ let answer: Hallucinable = llm.chat(prompt)
 let verified: Fact = verify(answer, source: "web_search")
 ```
 
-### 5.3 Type Conversion Rules
+### 5.4 Type Conversion Rules
 
 | From ↓ / To → | Secret | Untrusted | Fact | Hallucinable | Control |
 |:-------------:|:------:|:---------:|:----:|:------------:|:-------:|
@@ -386,7 +444,7 @@ let verified: Fact = verify(answer, source: "web_search")
 
 > **Legend:** ✅ direct, ⚠️ requires explicit conversion, ❌ forbidden
 
-### 5.4 Type Annotations (Optional — for type checking)
+### 5.5 Type Annotations (Optional — for type checking)
 
 ```tac
 let api_key: Secret = config_get("provider.api_key")
