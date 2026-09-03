@@ -65,7 +65,10 @@ tac-language/
 │   ├── web_qa.tac              # Web Q&A flow (parallel search + synthesis)
 │   ├── graph_builder.tac       # Knowledge graph builder from web pages
 │   ├── multi_agent_review.tac  # Multi-agent code review orchestrator
-│   └── typed_inputs.tac        # Value types + trust types on declared inputs
+│   ├── typed_inputs.tac        # Value types + trust types on declared inputs
+│   ├── value_types.tac         # All six value types in one flow
+│   ├── parameterized_subflow.tac # Typed inputs bound via flow.run(flow, params)
+│   └── input_conformance.tac   # Unknown type names degrade, never error
 ├── testdata/                   # Golden file tests
 ├── docs/
 │   ├── tac-lang-pipeline.html   # 3-stage pipeline diagram (Archify)
@@ -134,6 +137,7 @@ for n in ast.get('nodes', []):
 |---------|-------------|
 | **Memories are Variables** | Every named value is persistent by default — no `let x = 42` |
 | **Skills are the Standard Library** | No functions, only `skill` — maps 1:1 to real TacFlow APIs |
+| **Two Type Systems, One Slot** | Trust types model *provenance*; value types model *shape*. An `input` carries either |
 | **Execution is a DAG** | No call stack — every program is a directed acyclic graph |
 | **Concurrency is Swarm Delegation** | No threads — delegate to peer agents in the swarm |
 | **Context is Scope** | No nested `{}` — context windows model the attention span |
@@ -169,12 +173,66 @@ input question: Untrusted     // provenance — validate before use
 input max_results: integer    // shape — a whole number, not prose
 ```
 
-`string` · `integer` · `number` · `boolean` · `list` · `object`
+| Type | Accepts |
+|------|---------|
+| `string` | text |
+| `integer` | a whole number |
+| `number` | any number, integral or not |
+| `boolean` | `true` / `false` |
+| `list` | an ordered sequence |
+| `object` | a set of named fields |
 
-They are declarative and constrain declarations only — no runtime coercion, no
-variables, no expressions. An unrecognised type name means "unconstrained" and
-warns; it is never an error, so source written against a newer or
-dialect-extended TAC keeps compiling. See [`SPEC.md`](SPEC.md) §5.2.
+Three rules govern the slot:
+
+1. **One type per input** — a trust type or a value type, not both. Allowing
+   both on one declaration is left to a future revision.
+2. **An absent type means unconstrained.** `input target` is valid.
+3. **An unrecognised type name means unconstrained, with a warning — never an
+   error.** A toolchain that does not know a name must not reject the flow.
+   This is what lets `input q: Untrusted` and `input q: string` pass through
+   the same implementation, and what lets source written against a newer or
+   dialect-extended TAC keep compiling on an older one. An implementation that
+   hard-errors on an unknown type name is not conformant.
+
+Value types constrain **declarations only** — no runtime coercion, no
+variables, no expressions, no arithmetic. See [`SPEC.md`](SPEC.md) §5.2.
+
+### Binding Inputs: `flow.run`
+
+TAC has no user-defined functions and no dedicated call construct — §2.2
+stands, and a node target is always a `skill`. Running another flow is a
+**capability**: `flow.run(flow, params)`, from the standard library.
+
+Value types are what make that call checkable. The callee declares the shape it
+expects; the caller supplies it; a toolchain can compare the two before either
+flow runs.
+
+```tac
+flow "Code Review" {
+  input target: Untrusted
+  input depth: integer
+  ...
+}
+
+flow "Nightly Review" {
+  node "run_review" -> skill flow.run(
+    flow: "Code Review",
+    params: { target: branch, depth: 3, strict: true }
+  )
+}
+```
+
+### The Two Systems Are Independent
+
+Neither subsumes the other, and each misses what the other catches:
+
+- A **trust type** will not notice a string passed where an integer was meant.
+- A **value type** will not notice `Hallucinable` LLM output flowing into a
+  skill that requires `Fact`.
+
+[`examples/typed_inputs.tac`](examples/typed_inputs.tac) shows both in one
+flow. Delete its `verify()` node and the analyzer raises `TAC-TRUST-001` while
+every value type still checks out.
 
 ### Example: Web Q&A Flow
 
@@ -221,6 +279,9 @@ tac help                     # Show help
 | [`examples/graph_builder.tac`](examples/graph_builder.tac) | Extract concepts from a URL, build knowledge graph with relationships |
 | [`examples/multi_agent_review.tac`](examples/multi_agent_review.tac) | Spawn 3 reviewer agents in parallel, consolidate results |
 | [`examples/typed_inputs.tac`](examples/typed_inputs.tac) | Value types and trust types on one flow's declared inputs |
+| [`examples/value_types.tac`](examples/value_types.tac) | All six value types, and one near-miss name that degrades |
+| [`examples/parameterized_subflow.tac`](examples/parameterized_subflow.tac) | A callee declaring typed inputs, bound by a caller via `flow.run` |
+| [`examples/input_conformance.tac`](examples/input_conformance.tac) | Why an unrecognised type name warns instead of failing |
 
 ---
 
