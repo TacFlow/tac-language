@@ -93,8 +93,8 @@ func Compile(flow *ast.Node) (*FlowJSON, error) {
 		Version: "1.0",
 		Language: LanguageMeta{
 			Name:            "TAC",
-			LanguageVersion: "0.3",
-			CompilerVersion: "0.3.0",
+			LanguageVersion: "0.4",
+			CompilerVersion: "0.4.0",
 			IRVersion:       "1.1",
 		},
 		Nodes:    make([]FlowNode, 0),

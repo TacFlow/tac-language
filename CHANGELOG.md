@@ -2,6 +2,74 @@
 
 All notable changes to the TAC Language will be documented in this file.
 
+## [v0.4.0] — 2026-09-02
+
+### ✨ Value Types on Declared Inputs
+
+An `input` declaration's type slot now accepts a **value type** — `string`,
+`integer`, `number`, `boolean`, `list`, `object` — alongside the existing
+trust types.
+
+```tac
+flow "Search And Summarize" {
+  input question: Untrusted        // trust type — provenance
+  input max_results: integer       // value type — shape
+}
+```
+
+**This does not replace trust types, and it is not a retreat from them.**
+§2.2's "there is no `def fn()`" stands: TAC still has no user-defined
+functions, and a node target is still always a `skill`. What changed is
+narrower than that sentence suggests — the type slot on an `input` was already
+there, and it held exactly one kind of thing.
+
+The two systems catch different failures and neither subsumes the other. A
+trust type will not notice a string passed where an integer was meant; a value
+type will not notice `Hallucinable` LLM output flowing into a skill that
+requires `Fact`. `examples/typed_inputs.tac` shows both in one flow: delete its
+`verify()` node and the analyzer raises `TAC-TRUST-001` while every value type
+still checks out.
+
+### 📐 The Rule That Matters For Implementers
+
+**An unrecognised type name means "unconstrained", with a warning — never an
+error.** A toolchain that does not know a name must not reject the flow.
+
+This is what lets `input q: Untrusted` and `input q: string` pass through the
+same implementation without either becoming a hard failure, and it is what lets
+source written against a newer or dialect-extended TAC keep compiling on an
+older one. An implementation that hard-errors on an unknown type name is not
+conformant.
+
+### 📄 Also
+
+- `SPEC.md` §5 restructured: trust types and value types are now presented as
+  two systems sharing one slot. Former §5.2–§5.4 renumbered to §5.3–§5.5.
+- New `examples/typed_inputs.tac`, dialect-neutral — every node target is a
+  `skill`, per the §12.3 grammar.
+- `version` → `0.4.0`, `langVersion` → `0.4`. `irVersion` stays `1.1`: the
+  emitted IR is unchanged.
+
+### 🔎 Known Issue (pre-existing, not introduced here)
+
+`context: [..]` can hang the semantic analyzer on some flow shapes. Reproduced
+on v0.3.0 with no v0.4.0 changes present:
+
+```tac
+flow "D" {
+  input question: Untrusted
+  node "search" -> skill web_search(query: question, count: 3)
+  node "summarize" -> skill llm.chat(prompt: "Summarize:", context: [..])
+  search -> summarize
+  on "user_message" -> search
+}
+```
+
+`tac validate` does not terminate. Removing `context: [..]` fixes it. Shipped
+`examples/web_qa.tac` uses the same construct and does validate, so the trigger
+is shape-dependent rather than the construct alone. Left unfixed here — this is
+a docs release and the fault is in the analyzer.
+
 ## [v0.2.0] — 2026-08-03
 
 ### 🏗️ Modular Architecture (Major Refactor)

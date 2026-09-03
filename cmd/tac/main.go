@@ -26,8 +26,8 @@ import (
 	"github.com/TacFlow/tac-language/semantic"
 )
 
-const version     = "0.3.0"
-const langVersion = "0.3"
+const version     = "0.4.0"
+const langVersion = "0.4"
 const irVersion   = "1.1"
 
 func main() {
