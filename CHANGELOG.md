@@ -41,12 +41,42 @@ source written against a newer or dialect-extended TAC keep compiling on an
 older one. An implementation that hard-errors on an unknown type name is not
 conformant.
 
+### 🔗 Binding a Declared Input
+
+Value types are what make a sub-flow call checkable. TAC has no dedicated call
+construct — a node target is always a `skill` — so running another flow is a
+capability: `flow.run(flow, params)`, already in the standard library (§7.1).
+Its `params` object binds the callee's declared inputs by name.
+
+```tac
+flow "Code Review" {
+  input target: Untrusted
+  input depth: integer
+}
+
+flow "Nightly Review" {
+  node "run" -> skill flow.run(flow: "Code Review", params: { target: branch, depth: 3 })
+}
+```
+
+The callee declares the shape it expects, the caller supplies it, and a
+toolchain can compare the two before either flow runs — rather than finding out
+at execution time that `depth` arrived as prose. Documented in §5.2.
+
 ### 📄 Also
 
 - `SPEC.md` §5 restructured: trust types and value types are now presented as
-  two systems sharing one slot. Former §5.2–§5.4 renumbered to §5.3–§5.5.
-- New `examples/typed_inputs.tac`, dialect-neutral — every node target is a
-  `skill`, per the §12.3 grammar.
+  two systems sharing one slot. Former §5.2–§5.4 renumbered to §5.3–§5.5, and
+  §5.2 gains a "Binding a declared input" subsection.
+- `README.md`: Core Concepts gains a row for the two type systems; the Value
+  Types section now carries the full type table, all three slot rules, the
+  `flow.run` binding, and why neither system subsumes the other.
+- Four examples, all dialect-neutral — every node target is a `skill`, per the
+  §12.3 grammar:
+  - `examples/typed_inputs.tac` — trust and value types side by side
+  - `examples/value_types.tac` — all six value types, plus one near-miss name
+  - `examples/parameterized_subflow.tac` — a callee bound via `flow.run`
+  - `examples/input_conformance.tac` — why an unknown type name warns
 - `version` → `0.4.0`, `langVersion` → `0.4`. `irVersion` stays `1.1`: the
   emitted IR is unchanged.
 

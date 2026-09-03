@@ -416,6 +416,29 @@ Value types constrain *declarations only*. They do not change how a skill is
 invoked, they add no runtime coercion, and they do not introduce variables,
 expressions, or arithmetic to the language.
 
+#### Binding a declared input
+
+TAC has no dedicated call construct — a node target is always a `skill` (§2.2,
+§12.3). Running another flow is a capability: `flow.run(flow, params)` from the
+standard library (§7.1), whose `params` object binds the callee's declared
+inputs by name.
+
+```tac
+flow "Code Review" {
+  input target: Untrusted
+  input depth: integer
+}
+
+flow "Nightly Review" {
+  node "run" -> skill flow.run(flow: "Code Review", params: { target: branch, depth: 3 })
+}
+```
+
+Value types are what make that binding checkable: the callee declares the shape
+it expects and the caller supplies it, so a toolchain can compare the two
+before either flow runs rather than discovering at execution time that `depth`
+arrived as prose. See `examples/parameterized_subflow.tac`.
+
 ### 5.3 Implicit Type Inference
 
 ```
