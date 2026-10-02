@@ -460,6 +460,11 @@ func FuzzCompilePipeline(f *testing.F) {
 	seeds := []string{
 		`flow "x" { node "a" -> skill web_search(query: "test") }`,
 		`flow "f" { input q: Untrusted node "a" -> skill verify(source: "x") node "b" -> skill memory_store(text: a.result) a -> b on "init" -> a }`,
+		// v0.5 (LAYA)
+		`gate[<-5] -> a`,
+		`task "t" { question q: number "N" { range: [0, 100] } } flow "g" { node "gate" -> skill laya.decide(task: "t", input: payload) node "a" -> skill laya.tasks.list() gate[<10] -> a gate[5..50] -> a }`,
+		`episode "e" { question q: ranking "R" { a: "1", b: "2" } target q = ["b", "a"] } dataset "d" { task "t" split train = 1 }`,
+		`flow "s" { schedule "61 * * * *" tz "Mars/Phobos" on "x" -> a node "a" -> skill laya.train(model: "m") }`,
 	}
 	for _, s := range seeds {
 		f.Add(s)
@@ -478,6 +483,7 @@ func FuzzCompilePipeline(f *testing.F) {
 		_ = formatter.Format(program)
 		_ = semantic.New().Analyze(program)
 		_, _ = compiler.CompileProgram(program)
+		_, _ = compiler.CompileProgramIR(program)
 	})
 }
 
