@@ -1,6 +1,10 @@
 package laya
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/TacFlow/tac-language/ast"
+)
 
 func TestCanonical_StructuralEquality(t *testing.T) {
 	eq := [][2]string{
@@ -63,6 +67,20 @@ func TestRanges_ParseAndOverlap(t *testing.T) {
 	for _, bad := range []string{"proceed", "range:", "range:50..10", "range:a..b", "range:<x"} {
 		if _, ok := ParseRangeLabel(bad); ok {
 			t.Errorf("ParseRangeLabel(%q) should fail", bad)
+		}
+	}
+}
+
+// M-8: the pseudo-labels have one definition, in ast (the parser builds
+// `[*]` from ast.LabelAny); laya refers to it.
+func TestPseudoLabelsAreTheASTLabels(t *testing.T) {
+	want := []string{ast.LabelLowConfidence, ast.LabelError, ast.LabelAny}
+	if len(PseudoLabels) != len(want) {
+		t.Fatalf("PseudoLabels = %v, want %v", PseudoLabels, want)
+	}
+	for i := range want {
+		if PseudoLabels[i] != want[i] || !IsPseudoLabel(want[i]) {
+			t.Errorf("PseudoLabels = %v, want %v", PseudoLabels, want)
 		}
 	}
 }

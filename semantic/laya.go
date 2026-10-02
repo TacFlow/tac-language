@@ -403,7 +403,7 @@ func (a *Analyzer) validateGate(flowName, src string, call *ast.Node, outs []bra
 		}
 	}
 
-	if !labels[laya.PseudoLabels[2]] { // no [*]
+	if !labels[ast.LabelAny] {
 		var missing []string
 		if known && q.Type != laya.TypeNumber {
 			for _, l := range laya.TaskLabels(q) {
@@ -412,7 +412,7 @@ func (a *Analyzer) validateGate(flowName, src string, call *ast.Node, outs []bra
 				}
 			}
 		}
-		for _, p := range []string{"low_confidence", "error"} {
+		for _, p := range []string{ast.LabelLowConfidence, ast.LabelError} {
 			if !labels[p] {
 				missing = append(missing, p)
 			}

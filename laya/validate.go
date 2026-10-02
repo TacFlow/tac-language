@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/TacFlow/tac-language/ast"
 )
 
 // Diagnostic codes owned by this package (DESIGN §5.9).
@@ -30,8 +32,9 @@ var (
 )
 
 // PseudoLabels are the branches every gate understands besides the task's
-// own labels. A task may not use them as labels (TAC-LAYA-017).
-var PseudoLabels = []string{"low_confidence", "error", "*"}
+// own labels (defined once, in ast). A task may not use them as labels
+// (TAC-LAYA-017).
+var PseudoLabels = []string{ast.LabelLowConfidence, ast.LabelError, ast.LabelAny}
 
 // IsPseudoLabel reports whether s is a reserved pseudo-label.
 func IsPseudoLabel(s string) bool {
