@@ -26,6 +26,11 @@ type FlowJSON struct {
 	RegistrySnapshot  string            `json:"registry_snapshot,omitempty"`
 	TrustPolicyVersion string           `json:"trust_policy_version,omitempty"`
 	Fingerprint       string            `json:"fingerprint,omitempty"`
+	// Requires is the language level the flow needs ("0.5" when it uses a
+	// LAYA construct), stamped by the compiler whether or not the source
+	// declares `requires`.
+	Requires  string       `json:"requires,omitempty"`
+	Schedules []ScheduleIR `json:"schedules,omitempty"`
 	Nodes             []FlowNode        `json:"nodes"`
 	Edges             []FlowEdge        `json:"edges"`
 	Triggers          []FlowTrigger     `json:"triggers,omitempty"`
@@ -73,6 +78,25 @@ type FlowEdge struct {
 	To        string        `json:"to"`
 	Condition *ConditionIR  `json:"condition,omitempty"`
 	Fallback  string        `json:"fallback,omitempty"`
+	// Label is the branch of a labelled gate edge (`gate[proceed] -> x`):
+	// the label, "true"/"false" or "*". Numeric branches use Range instead.
+	Label string   `json:"label,omitempty"`
+	Range *RangeIR `json:"range,omitempty"`
+}
+
+// RangeIR is a numeric gate branch: {"op": ">=", "value": 50} for an open
+// range, {"min": 10, "max": 50} for [10, 50).
+type RangeIR struct {
+	Op    string      `json:"op,omitempty"`
+	Value json.Number `json:"value,omitempty"`
+	Min   json.Number `json:"min,omitempty"`
+	Max   json.Number `json:"max,omitempty"`
+}
+
+// ScheduleIR is one `schedule "<cron>" [tz "<IANA>"]` line of a flow.
+type ScheduleIR struct {
+	Cron string `json:"cron"`
+	TZ   string `json:"tz,omitempty"`
 }
 
 // FlowTrigger represents an event-driven activation.
@@ -93,14 +117,16 @@ func Compile(flow *ast.Node) (*FlowJSON, error) {
 		Version: "1.0",
 		Language: LanguageMeta{
 			Name:            "TAC",
-			LanguageVersion: "0.4",
-			CompilerVersion: "0.4.0",
-			IRVersion:       "1.1",
+			LanguageVersion: LanguageVersion,
+			CompilerVersion: CompilerVersion,
+			IRVersion:       IRVersion,
 		},
 		Nodes:    make([]FlowNode, 0),
 		Edges:    make([]FlowEdge, 0),
 		Manifest: manifest.ExtractManifest(flow),
 	}
+
+	usesLaya := false // any v0.5 LAYA construct -> "requires"
 
 	// Compile nodes
 	nodeIDs := make(map[string]string) // display name -> id
@@ -129,6 +155,9 @@ func Compile(flow *ast.Node) (*FlowJSON, error) {
 			}
 		}
 
+		if strings.HasPrefix(skillName, "laya.") {
+			usesLaya = true
+		}
 		fj.Nodes = append(fj.Nodes, FlowNode{
 			ID:    id,
 			Name:  name,
@@ -147,6 +176,14 @@ func Compile(flow *ast.Node) (*FlowJSON, error) {
 			From: nodeIDs[src],
 			To:   nodeIDs[tgt],
 		}
+		if b := ast.EdgeLabel(edge); b != nil {
+			usesLaya = true
+			if b.Type == ast.NodeRange {
+				fe.Range = compileRange(b)
+			} else {
+				fe.Label = ast.LabelString(b)
+			}
+		}
 
 		if _, fb, hasCond := ast.EdgeCondition(edge); hasCond {
 			fe.Condition = compileCondition(edge.Attrs["if"])
@@ -160,6 +197,19 @@ func Compile(flow *ast.Node) (*FlowJSON, error) {
 		}
 
 		fj.Edges = append(fj.Edges, fe)
+	}
+
+	// Schedules
+	for _, child := range flow.Children {
+		if child.Type != ast.NodeSchedule || len(child.Children) == 0 {
+			continue
+		}
+		usesLaya = true
+		sc := ScheduleIR{Cron: child.Children[0].Value}
+		if tz := child.Attrs["tz"]; tz != nil {
+			sc.TZ = tz.Value
+		}
+		fj.Schedules = append(fj.Schedules, sc)
 	}
 
 	// Compile triggers
@@ -207,7 +257,22 @@ func Compile(flow *ast.Node) (*FlowJSON, error) {
 		fj.Triggers = append(fj.Triggers, ft)
 	}
 
+	if usesLaya {
+		fj.Requires = LayaLanguage
+	}
 	return fj, nil
+}
+
+// compileRange converts a Range branch: [a..b] -> {min, max}; <v, <=v, >v,
+// >=v -> {op, value}. Numbers keep their literal.
+func compileRange(b *ast.Node) *RangeIR {
+	if b.Value == ".." && len(b.Children) == 2 {
+		return &RangeIR{Min: json.Number(b.Children[0].Value), Max: json.Number(b.Children[1].Value)}
+	}
+	if len(b.Children) == 1 {
+		return &RangeIR{Op: b.Value, Value: json.Number(b.Children[0].Value)}
+	}
+	return &RangeIR{}
 }
 
 // CompileProgram compiles all flows in a program.
