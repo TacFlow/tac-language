@@ -17,6 +17,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"sort"
 
@@ -251,14 +252,42 @@ func cmdFmt(path string) {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
+	if code := runFmt(source, os.Stdout, os.Stderr); code != 0 {
+		os.Exit(code)
+	}
+}
 
+// runFmt is `tac fmt` on source: the formatted text on stdout and the exit
+// code.
+func runFmt(source string, stdout, stderr io.Writer) int {
 	program, err := parser.ParseSource(source)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Parse error: %v\n", err)
-		os.Exit(1)
+		fmt.Fprintf(stderr, "Parse error: %v\n", err)
+		return 1
 	}
 
-	fmt.Print(formatter.Format(program))
+	// The formatter prints what the parser read: a form it skipped
+	// (TAC-PARSE-001) would vanish from the output. Refuse instead of
+	// deleting the user's text.
+	unreadable := false
+	ast.Walk(program, func(n *ast.Node, _ int) bool {
+		if n.Type == ast.NodeUnrecognized || n.Type == ast.NodeGluedNumber {
+			unreadable = true
+		}
+		return !unreadable
+	})
+	if unreadable {
+		for _, d := range semantic.New().Analyze(program) {
+			if d.Code == semantic.DiagParse+"-001" {
+				fmt.Fprintf(stderr, "%s\n", d)
+			}
+		}
+		fmt.Fprintln(stderr, "tac fmt: not formatted — the source has text the parser could not read (TAC-PARSE-001), which formatting would delete; fix it first")
+		return 1
+	}
+
+	fmt.Fprint(stdout, formatter.Format(program))
+	return 0
 }
 
 func cmdValidate(path string, mode semantic.Mode) {
