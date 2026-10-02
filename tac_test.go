@@ -599,7 +599,11 @@ func FuzzParser(f *testing.F) {
 		`model "m" { tasks ["t"] base "b" port 18101 }`,
 		`episode "e" { group "g" goal "x" context { a: -1.5, b: [1, 2] } rule "r" tool "t" k true question q: number "N" { range: [-10, 10] } target q = -3 meta { synthetic: true } }`,
 		`dataset "d" { task "t" from "db" include "a", "b" split train = 0.7 split test = 0.3 }`,
-		`remember x = [}`,
+		`remember x = [}`,		// deep nesting: a parse error past parser.MaxDepth, never a stack overflow (I-4)
+		"remember x = " + strings.Repeat("[", 513) + strings.Repeat("]", 513),
+		"remember x = " + strings.Repeat("{a: ", 513) + "1" + strings.Repeat("}", 513),
+		`flow "f" { node "a" -> skill s(x: ` + strings.Repeat("[", 5000) + `) }`,
+		`flow "f" { node "a" ` + strings.Repeat("{ if x ", 513) + strings.Repeat("}", 513) + ` }`,
 	}
 
 	for _, s := range seeds {

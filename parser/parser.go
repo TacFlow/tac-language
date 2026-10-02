@@ -26,11 +26,32 @@ import (
 	"github.com/TacFlow/tac-language/lexer"
 )
 
+// MaxDepth is how deeply values (`[`, `{`) and statement blocks may nest.
+// Parsing recurses per level; past the limit the source is a parse error
+// instead of a stack overflow no caller can recover from.
+const MaxDepth = 512
+
 // Parser converts a token stream into an AST.
 type Parser struct {
 	tokens []lexer.Token
 	pos    int
+	depth  int   // current nesting of values and blocks
+	err    error // set once MaxDepth is exceeded; parsing then stops
 }
+
+// enter opens one nesting level. Past MaxDepth it records the parse error
+// and returns false; from then on peek reports EOF, so every loop ends and
+// Parse returns the error.
+func (p *Parser) enter() bool {
+	p.depth++
+	if p.depth > MaxDepth && p.err == nil {
+		tok := p.peek()
+		p.err = fmt.Errorf("line %d, col %d: values and blocks nest more than %d levels deep", tok.Line, tok.Col, MaxDepth)
+	}
+	return p.err == nil
+}
+
+func (p *Parser) leave() { p.depth-- }
 
 // New creates a new Parser for the given token stream.
 func New(tokens []lexer.Token) *Parser {
@@ -51,7 +72,7 @@ func (p *Parser) posAt() ast.Position {
 }
 
 func (p *Parser) peek() lexer.Token {
-	if p.pos >= len(p.tokens) {
+	if p.pos >= len(p.tokens) || p.err != nil {
 		return lexer.Token{Type: lexer.EOF}
 	}
 	return p.tokens[p.pos]
@@ -131,6 +152,10 @@ func (p *Parser) parseObjectLiteral() *ast.Node {
 	tok := p.advance() // {
 	n := ast.NewNode(ast.NodeObjectLiteral, tok.Line, tok.Col)
 	n.MapVal = make(map[string]*ast.Node)
+	defer p.leave()
+	if !p.enter() {
+		return n
+	}
 	p.skipNewlines()
 	for p.peek().Type != lexer.RBrace && p.peek().Type != lexer.EOF {
 		keyTok := p.peek()
@@ -163,6 +188,10 @@ func (p *Parser) parseArrayLiteral() *ast.Node {
 	tok := p.advance() // [
 	n := ast.NewNode(ast.NodeArrayLiteral, tok.Line, tok.Col)
 	n.ArrVal = make([]*ast.Node, 0)
+	defer p.leave()
+	if !p.enter() {
+		return n
+	}
 	p.skipNewlines()
 	for p.peek().Type != lexer.RBrack && p.peek().Type != lexer.EOF {
 		val := p.parseValue()
@@ -465,6 +494,10 @@ func (p *Parser) parseBlock() []*ast.Node {
 		return nodes
 	}
 	p.advance() // {
+	defer p.leave()
+	if !p.enter() {
+		return nodes
+	}
 	p.skipNewlines()
 
 	// Track brace depth for nested blocks
@@ -846,6 +879,9 @@ func (p *Parser) Parse() (*ast.Node, error) {
 		p.skipNewlines()
 	}
 
+	if p.err != nil {
+		return nil, p.err
+	}
 	return program, nil
 }
 

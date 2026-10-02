@@ -468,7 +468,11 @@ func FuzzCompilePipeline(f *testing.F) {
 		// number literals JSON forbids or float64 cannot hold (I-1)
 		`flow "n" { node "a" -> skill web_search(query: "q", count: 007, x: -00.5, y: 1e999999999, z: 1e-400) }`,
 		`model "m" { tasks ["t"] port 0080 } episode "e" { meta { nonce: 00012 } question q: binary "B?" }`,
-		`flow "g" { node "g" -> skill laya.decide(task: "t", input: payload) node "a" -> skill laya.tasks.list() g[010..20] -> a g[<-05] -> a }`,
+		`flow "g" { node "g" -> skill laya.decide(task: "t", input: payload) node "a" -> skill laya.tasks.list() g[010..20] -> a g[<-05] -> a }`,		// deep nesting: a parse error past parser.MaxDepth, never a stack overflow (I-4)
+		"remember x = " + strings.Repeat("[", 513) + strings.Repeat("]", 513),
+		"remember x = " + strings.Repeat("{a: ", 513) + "1" + strings.Repeat("}", 513),
+		`flow "f" { node "a" -> skill s(x: ` + strings.Repeat("[", 5000) + `) }`,
+		`flow "f" { node "a" ` + strings.Repeat("{ if x ", 513) + strings.Repeat("}", 513) + ` }`,
 	}
 	for _, s := range seeds {
 		f.Add(s)
