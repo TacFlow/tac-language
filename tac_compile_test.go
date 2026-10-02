@@ -465,6 +465,10 @@ func FuzzCompilePipeline(f *testing.F) {
 		`task "t" { question q: number "N" { range: [0, 100] } } flow "g" { node "gate" -> skill laya.decide(task: "t", input: payload) node "a" -> skill laya.tasks.list() gate[<10] -> a gate[5..50] -> a }`,
 		`episode "e" { question q: ranking "R" { a: "1", b: "2" } target q = ["b", "a"] } dataset "d" { task "t" split train = 1 }`,
 		`flow "s" { schedule "61 * * * *" tz "Mars/Phobos" on "x" -> a node "a" -> skill laya.train(model: "m") }`,
+		// number literals JSON forbids or float64 cannot hold (I-1)
+		`flow "n" { node "a" -> skill web_search(query: "q", count: 007, x: -00.5, y: 1e999999999, z: 1e-400) }`,
+		`model "m" { tasks ["t"] port 0080 } episode "e" { meta { nonce: 00012 } question q: binary "B?" }`,
+		`flow "g" { node "g" -> skill laya.decide(task: "t", input: payload) node "a" -> skill laya.tasks.list() g[010..20] -> a g[<-05] -> a }`,
 	}
 	for _, s := range seeds {
 		f.Add(s)
@@ -481,9 +485,23 @@ func FuzzCompilePipeline(f *testing.F) {
 			return
 		}
 		_ = formatter.Format(program)
-		_ = semantic.New().Analyze(program)
+		a := semantic.New()
+		_ = a.Analyze(program)
 		_, _ = compiler.CompileProgram(program)
-		_, _ = compiler.CompileProgramIR(program)
+		ir, err := compiler.CompileProgramIR(program)
+		if a.HasErrors() || err != nil {
+			return
+		}
+		// A program the analyzer accepts compiles to JSON every consumer
+		// can read back (I-1: `007`, `1e999`).
+		b, err := json.Marshal(ir)
+		if err != nil {
+			t.Fatalf("accepted program does not marshal: %v\n%s", err, input)
+		}
+		var back interface{}
+		if err := json.Unmarshal(b, &back); err != nil {
+			t.Fatalf("accepted program's JSON does not unmarshal: %v\n%s", err, input)
+		}
 	})
 }
 

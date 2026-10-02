@@ -3,7 +3,10 @@
 // TAC is The TacFlow Agentic Code — a DSL for autonomous AI agents.
 package ast
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // NodeType identifies the kind of AST node.
 type NodeType string
@@ -287,4 +290,20 @@ func LabelString(b *Node) string {
 	default:
 		return b.Value
 	}
+}
+
+// JSONNumber returns a number literal as valid JSON number text. The lexer
+// accepts leading zeros (`007`, `-00.5`, `0080`), which JSON forbids; they
+// are dropped (`7`, `-0.5`, `80`), as v0.4 did when it read the value as a
+// float. Every other spelling (`1.50`, `1e3`) is kept as written.
+func JSONNumber(lit string) string {
+	sign := ""
+	if strings.HasPrefix(lit, "-") {
+		sign, lit = "-", lit[1:]
+	}
+	i := 0
+	for i+1 < len(lit) && lit[i] == '0' && lit[i+1] >= '0' && lit[i+1] <= '9' {
+		i++
+	}
+	return sign + lit[i:]
 }

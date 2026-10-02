@@ -267,10 +267,10 @@ func Compile(flow *ast.Node) (*FlowJSON, error) {
 // >=v -> {op, value}. Numbers keep their literal.
 func compileRange(b *ast.Node) *RangeIR {
 	if b.Value == ".." && len(b.Children) == 2 {
-		return &RangeIR{Min: json.Number(b.Children[0].Value), Max: json.Number(b.Children[1].Value)}
+		return &RangeIR{Min: json.Number(ast.JSONNumber(b.Children[0].Value)), Max: json.Number(ast.JSONNumber(b.Children[1].Value))}
 	}
 	if len(b.Children) == 1 {
-		return &RangeIR{Op: b.Value, Value: json.Number(b.Children[0].Value)}
+		return &RangeIR{Op: b.Value, Value: json.Number(ast.JSONNumber(b.Children[0].Value))}
 	}
 	return &RangeIR{}
 }
@@ -347,7 +347,7 @@ func nodeToValue(n *ast.Node) interface{} {
 	case ast.NodeNumberLiteral:
 		// The literal, not a float64: no 1e+21, no loss above 2^53.
 		if n.Value != "" {
-			return json.Number(n.Value)
+			return json.Number(ast.JSONNumber(n.Value))
 		}
 		return n.NumVal
 	case ast.NodeBoolLiteral:

@@ -18,7 +18,7 @@ func DataValue(n *ast.Node) interface{} {
 	case ast.NodeStringLiteral, ast.NodeIdentifier:
 		return n.Value
 	case ast.NodeNumberLiteral:
-		return json.Number(n.Value)
+		return json.Number(ast.JSONNumber(n.Value))
 	case ast.NodeBoolLiteral:
 		return n.BoolVal
 	case ast.NodeObjectLiteral:
@@ -44,7 +44,7 @@ func numbers(n *ast.Node) []json.Number {
 	out := make([]json.Number, 0, len(n.ArrVal))
 	for _, v := range n.ArrVal {
 		if v.Type == ast.NodeNumberLiteral {
-			out = append(out, json.Number(v.Value))
+			out = append(out, json.Number(ast.JSONNumber(v.Value)))
 		}
 	}
 	return out
@@ -121,7 +121,7 @@ func ModelFromAST(n *ast.Node) Model {
 		m.Base = b.Value
 	}
 	if p := n.Attrs["port"]; p != nil {
-		m.Port = json.Number(p.Value)
+		m.Port = json.Number(ast.JSONNumber(p.Value))
 	}
 	return m
 }
@@ -141,7 +141,7 @@ func DatasetFromAST(n *ast.Node) Dataset {
 			if d.Splits == nil {
 				d.Splits = map[string]json.Number{}
 			}
-			d.Splits[c.Value] = json.Number(c.Children[0].Value)
+			d.Splits[c.Value] = json.Number(ast.JSONNumber(c.Children[0].Value))
 		}
 	}
 	return d

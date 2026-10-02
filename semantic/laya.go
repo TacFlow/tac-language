@@ -403,3 +403,28 @@ func (a *Analyzer) validateGate(flowName, src string, call *ast.Node, outs []bra
 		}
 	}
 }
+
+// checkNumberLiterals reports every number literal that overflows a float64
+// (`1e999`): the IR keeps the literal (json.Number), which is valid JSON
+// that no consumer can decode. A literal that underflows to 0 (`1e-400`) is
+// finite and accepted. Reported in source order.
+func (a *Analyzer) checkNumberLiterals(program *ast.Node) {
+	var bad []*ast.Node
+	ast.Walk(program, func(n *ast.Node, _ int) bool {
+		if n.Type == ast.NodeNumberLiteral {
+			if f, err := strconv.ParseFloat(n.Value, 64); err != nil && (math.IsInf(f, 0) || math.IsNaN(f)) {
+				bad = append(bad, n)
+			}
+		}
+		return true
+	})
+	sort.SliceStable(bad, func(i, j int) bool {
+		if bad[i].Pos.Line != bad[j].Pos.Line {
+			return bad[i].Pos.Line < bad[j].Pos.Line
+		}
+		return bad[i].Pos.Col < bad[j].Pos.Col
+	})
+	for _, n := range bad {
+		a.errorf("", n.Pos.Line, n.Pos.Col, "number %s is not a finite number (it overflows a 64-bit float)", n.Value)
+	}
+}

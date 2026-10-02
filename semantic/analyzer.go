@@ -525,6 +525,9 @@ func (a *Analyzer) Analyze(program *ast.Node) []Diagnostic {
 	// Pass 1b (v0.5): LAYA declarations, requires, top-level forms.
 	a.analyzeDecls(program)
 
+	// Pass 1c (v0.5): every number literal must fit a float64 (I-1).
+	a.checkNumberLiterals(program)
+
 	// Pass 2: validate each flow
 	for _, flow := range ast.CollectFlows(program) {
 		a.validateFlow(flow)
