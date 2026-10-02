@@ -246,10 +246,21 @@ func CompileAndValidate(program *ast.Node) ([]*FlowJSON, []semantic.Diagnostic, 
 func compileArgs(call *ast.Node) map[string]interface{} {
 	args := make(map[string]interface{})
 
-	// Positional args become numeric keys
-	for i, arg := range call.Args {
-		key := fmt.Sprintf("arg%d", i)
-		args[key] = nodeToValue(arg)
+	// Named args inside the parentheses keep their name and value (bug a,
+	// v0.4.0: they became {"arg<i>": "<name>"}). Positional args become
+	// numeric keys, counted among the positional ones only.
+	pos := 0
+	for _, arg := range call.Args {
+		if arg.Type == ast.NodeNamedArg {
+			var v interface{}
+			if len(arg.Children) > 0 {
+				v = nodeToValue(arg.Children[0])
+			}
+			args[arg.Value] = v
+			continue
+		}
+		args[fmt.Sprintf("arg%d", pos)] = nodeToValue(arg)
+		pos++
 	}
 
 	// Named args
@@ -269,11 +280,17 @@ func nodeToValue(n *ast.Node) interface{} {
 	case ast.NodeStringLiteral:
 		return n.Value
 	case ast.NodeNumberLiteral:
+		// The literal, not a float64: no 1e+21, no loss above 2^53.
+		if n.Value != "" {
+			return json.Number(n.Value)
+		}
 		return n.NumVal
 	case ast.NodeBoolLiteral:
 		return n.BoolVal
 	case ast.NodeIdentifier:
-		return n.Value
+		// A bare identifier is a reference to a value produced elsewhere
+		// (an input, payload, a node output such as exp.path).
+		return map[string]interface{}{"ref": n.Value}
 	case ast.NodeObjectLiteral:
 		m := make(map[string]interface{})
 		for key, val := range n.MapVal {
