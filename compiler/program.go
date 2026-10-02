@@ -19,6 +19,10 @@ type ProgramIR struct {
 // CompileProgramIR compiles every flow and every task/model/episode/dataset
 // declaration of program. Declarations keep file order; when two episodes
 // share an id the last one wins (the analyzer warns TAC-LAYA-013).
+//
+// It does not run semantic analysis: it compiles whatever the parser read,
+// including programs the analyzer rejects. Run semantic.Analyze first and
+// compile only when it reports no errors (as `tac compile --json` does).
 func CompileProgramIR(program *ast.Node) (*ProgramIR, error) {
 	flows, err := CompileProgram(program)
 	if err != nil {
