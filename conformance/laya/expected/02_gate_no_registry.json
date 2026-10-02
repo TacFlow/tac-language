@@ -1,0 +1,73 @@
+{
+  "only": "",
+  "ok_upstream": true,
+  "ok_dialect": true,
+  "codes_upstream": [
+    "TAC-LAYA-001"
+  ],
+  "codes_dialect": [
+    "TAC-LAYA-001"
+  ],
+  "shape": {
+    "flows": [
+      {
+        "name": "gate_no_registry",
+        "nodes": [
+          {
+            "name": "gate",
+            "skill": "laya.decide",
+            "args": {
+              "input": {
+                "ref": "payload"
+              },
+              "min_confidence": 0.8,
+              "task": "acao"
+            }
+          },
+          {
+            "name": "a",
+            "skill": "laya.tasks.list",
+            "args": {}
+          },
+          {
+            "name": "b",
+            "skill": "laya.tasks.describe",
+            "args": {
+              "task": "acao"
+            }
+          },
+          {
+            "name": "c",
+            "skill": "laya.model.status",
+            "args": {
+              "model": "estoque"
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "gate",
+            "to": "a",
+            "label": "proceed"
+          },
+          {
+            "from": "gate",
+            "to": "b",
+            "label": "*"
+          },
+          {
+            "from": "gate",
+            "to": "c",
+            "label": "error"
+          }
+        ],
+        "triggers": [],
+        "schedules": []
+      }
+    ],
+    "tasks": [],
+    "models": [],
+    "episodes": [],
+    "datasets": []
+  }
+}

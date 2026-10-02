@@ -1,0 +1,50 @@
+{
+  "only": "",
+  "ok_upstream": true,
+  "ok_dialect": false,
+  "codes_upstream": [
+    "TAC-GRAPH-003"
+  ],
+  "codes_dialect": [
+    "TAC-EVT-001",
+    "TAC-EVT-002"
+  ],
+  "shape": {
+    "flows": [
+      {
+        "name": "on_not_root",
+        "nodes": [
+          {
+            "name": "a",
+            "skill": "laya.tasks.list",
+            "args": {}
+          },
+          {
+            "name": "b",
+            "skill": "laya.tasks.list",
+            "args": {}
+          }
+        ],
+        "edges": [
+          {
+            "from": "a",
+            "to": "b"
+          }
+        ],
+        "triggers": [
+          {
+            "event": "estoque.baixo",
+            "targets": [
+              "b"
+            ]
+          }
+        ],
+        "schedules": []
+      }
+    ],
+    "tasks": [],
+    "models": [],
+    "episodes": [],
+    "datasets": []
+  }
+}

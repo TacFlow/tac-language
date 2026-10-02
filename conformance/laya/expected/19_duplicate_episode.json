@@ -1,0 +1,36 @@
+{
+  "only": "",
+  "ok_upstream": true,
+  "ok_dialect": true,
+  "codes_upstream": [
+    "TAC-LAYA-013"
+  ],
+  "codes_dialect": [
+    "TAC-LAYA-013"
+  ],
+  "shape": {
+    "flows": [],
+    "tasks": [],
+    "models": [],
+    "episodes": [
+      {
+        "id": "ep-dup",
+        "group_id": "conformance",
+        "state": {
+          "goal": "segunda versão: esta vence"
+        },
+        "questions": [
+          {
+            "id": "repor",
+            "type": "binary",
+            "instructions": "Repor?"
+          }
+        ],
+        "targets": {
+          "repor": true
+        }
+      }
+    ],
+    "datasets": []
+  }
+}

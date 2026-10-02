@@ -1,0 +1,106 @@
+{
+  "only": "",
+  "ok_upstream": true,
+  "ok_dialect": true,
+  "codes_upstream": [
+    "TAC-LAYA-010"
+  ],
+  "codes_dialect": [
+    "TAC-EVT-002",
+    "TAC-LAYA-010"
+  ],
+  "shape": {
+    "flows": [
+      {
+        "name": "estoque_treino",
+        "nodes": [
+          {
+            "name": "exp",
+            "skill": "laya.dataset.export",
+            "args": {
+              "exclude_inferred": true,
+              "task": "acao"
+            }
+          },
+          {
+            "name": "train",
+            "skill": "laya.train",
+            "args": {
+              "dataset": {
+                "ref": "exp.path"
+              },
+              "model": "estoque"
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "exp",
+            "to": "train"
+          }
+        ],
+        "triggers": [],
+        "schedules": [
+          {
+            "cron": "0 3 * * *",
+            "tz": "Europe/Lisbon"
+          }
+        ]
+      },
+      {
+        "name": "estoque_promover",
+        "nodes": [
+          {
+            "name": "ev",
+            "skill": "laya.eval",
+            "args": {
+              "model": "estoque",
+              "run": {
+                "ref": "payload.run"
+              }
+            }
+          },
+          {
+            "name": "prom",
+            "skill": "laya.model.promote",
+            "args": {
+              "if_better": true,
+              "max_drop_pp": 1,
+              "model": "estoque",
+              "run": {
+                "ref": "payload.run"
+              }
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "ev",
+            "to": "prom"
+          }
+        ],
+        "triggers": [
+          {
+            "event": "laya.train.completed",
+            "targets": [
+              "ev"
+            ]
+          }
+        ],
+        "schedules": []
+      }
+    ],
+    "tasks": [],
+    "models": [
+      {
+        "name": "estoque",
+        "tasks": [
+          "acao"
+        ],
+        "base": "laya-multilingual"
+      }
+    ],
+    "episodes": [],
+    "datasets": []
+  }
+}

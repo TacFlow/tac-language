@@ -1,0 +1,94 @@
+{
+  "only": "",
+  "ok_upstream": true,
+  "ok_dialect": true,
+  "codes_upstream": [],
+  "codes_dialect": [],
+  "shape": {
+    "flows": [
+      {
+        "name": "range_ok",
+        "nodes": [
+          {
+            "name": "gate",
+            "skill": "laya.decide",
+            "args": {
+              "input": {
+                "ref": "payload"
+              },
+              "task": "variacao"
+            }
+          },
+          {
+            "name": "baixa",
+            "skill": "laya.tasks.list",
+            "args": {}
+          },
+          {
+            "name": "media",
+            "skill": "laya.tasks.list",
+            "args": {}
+          },
+          {
+            "name": "alta",
+            "skill": "laya.tasks.list",
+            "args": {}
+          }
+        ],
+        "edges": [
+          {
+            "from": "gate",
+            "to": "baixa",
+            "label": "range:\u003c-5"
+          },
+          {
+            "from": "gate",
+            "to": "media",
+            "label": "range:-5..50"
+          },
+          {
+            "from": "gate",
+            "to": "alta",
+            "label": "range:\u003e=50"
+          },
+          {
+            "from": "gate",
+            "to": "baixa",
+            "label": "low_confidence"
+          },
+          {
+            "from": "gate",
+            "to": "baixa",
+            "label": "error"
+          }
+        ],
+        "triggers": [],
+        "schedules": []
+      }
+    ],
+    "tasks": [
+      {
+        "name": "variacao",
+        "questions": [
+          {
+            "id": "delta",
+            "type": "number",
+            "instructions": "Variação do estoque?",
+            "range": [
+              -100,
+              100
+            ],
+            "unit": "un",
+            "bins": [
+              -5,
+              50
+            ]
+          }
+        ]
+      }
+    ],
+    "models": [],
+    "episodes": [],
+    "datasets": []
+  }
+}

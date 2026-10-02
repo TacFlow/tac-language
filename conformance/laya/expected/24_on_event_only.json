@@ -1,0 +1,59 @@
+{
+  "only": "",
+  "ok_upstream": true,
+  "ok_dialect": true,
+  "codes_upstream": [],
+  "codes_dialect": [
+    "TAC-EVT-002"
+  ],
+  "shape": {
+    "flows": [
+      {
+        "name": "on_event_only",
+        "nodes": [
+          {
+            "name": "ev",
+            "skill": "laya.eval",
+            "args": {
+              "model": "estoque",
+              "run": {
+                "ref": "payload.run"
+              }
+            }
+          },
+          {
+            "name": "prom",
+            "skill": "laya.model.promote",
+            "args": {
+              "if_better": true,
+              "max_drop_pp": 1,
+              "model": "estoque",
+              "run": {
+                "ref": "payload.run"
+              }
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "ev",
+            "to": "prom"
+          }
+        ],
+        "triggers": [
+          {
+            "event": "estoque.baixo",
+            "targets": [
+              "ev"
+            ]
+          }
+        ],
+        "schedules": []
+      }
+    ],
+    "tasks": [],
+    "models": [],
+    "episodes": [],
+    "datasets": []
+  }
+}
