@@ -1,6 +1,8 @@
 package laya
 
 import (
+	"errors"
+	"fmt"
 	"math"
 	"strconv"
 	"strings"
@@ -48,45 +50,72 @@ type Interval struct {
 
 // ParseRangeLabel turns a canonical range label ("range:<10",
 // "range:10..50", "range:>=50" — ast.LabelString) into an interval.
-// [a..b] is [a, b), as DESIGN §5.4 says.
+// [a..b] is [a, b), as DESIGN §5.4 says. ok is false when CheckRangeLabel
+// reports a problem.
 func ParseRangeLabel(label string) (Interval, bool) {
+	iv, err := CheckRangeLabel(label)
+	return iv, err == nil
+}
+
+// CheckRangeLabel is ParseRangeLabel with the reason a label is not a
+// usable range: not a range at all, a bound that is not a finite number
+// (`1e999`), or an empty or inverted range (`[5..5]`, `[50..10]`).
+func CheckRangeLabel(label string) (Interval, error) {
 	s, ok := strings.CutPrefix(label, "range:")
 	if !ok {
-		return Interval{}, false
+		return Interval{}, errNotRange
 	}
 	inf := math.Inf(1)
-	parse := func(x string) (float64, bool) {
+	parse := func(x string) (float64, error) {
 		f, err := strconv.ParseFloat(x, 64)
-		return f, err == nil
+		if err != nil && (math.IsInf(f, 0) || math.IsNaN(f)) {
+			return 0, fmt.Errorf("bound %s is not a finite number", x)
+		}
+		if err != nil {
+			return 0, errNotRange
+		}
+		return f, nil
 	}
 	iv := Interval{Label: label}
+	var err error
 	switch {
 	case strings.HasPrefix(s, "<="):
-		v, ok := parse(s[2:])
-		iv.Lo, iv.Hi, iv.HiIn = -inf, v, true
-		return iv, ok
+		iv.Hi, err = parse(s[2:])
+		iv.Lo, iv.HiIn = -inf, true
+		return iv, err
 	case strings.HasPrefix(s, ">="):
-		v, ok := parse(s[2:])
-		iv.Lo, iv.Hi, iv.LoIn = v, inf, true
-		return iv, ok
+		iv.Lo, err = parse(s[2:])
+		iv.Hi, iv.LoIn = inf, true
+		return iv, err
 	case strings.HasPrefix(s, "<"):
-		v, ok := parse(s[1:])
-		iv.Lo, iv.Hi = -inf, v
-		return iv, ok
+		iv.Hi, err = parse(s[1:])
+		iv.Lo = -inf
+		return iv, err
 	case strings.HasPrefix(s, ">"):
-		v, ok := parse(s[1:])
-		iv.Lo, iv.Hi = v, inf
-		return iv, ok
+		iv.Lo, err = parse(s[1:])
+		iv.Hi = inf
+		return iv, err
 	}
 	lo, hi, found := strings.Cut(s, "..")
 	if !found {
-		return Interval{}, false
+		return Interval{}, errNotRange
 	}
-	a, ok1 := parse(lo)
-	b, ok2 := parse(hi)
+	a, err := parse(lo)
+	if err != nil {
+		return iv, err
+	}
+	b, err := parse(hi)
+	if err != nil {
+		return iv, err
+	}
 	iv.Lo, iv.Hi, iv.LoIn = a, b, true
-	return iv, ok1 && ok2 && a < b
+	if !(a < b) {
+		return iv, fmt.Errorf("empty or inverted range %s..%s: [a..b] is a <= x < b, so a must be below b", lo, hi)
+	}
+	return iv, nil
 }
+
+var errNotRange = errors.New("not a range (<v, <=v, >v, >=v, a..b)")
 
 // Overlap reports whether two intervals share at least one number.
 func Overlap(a, b Interval) bool {

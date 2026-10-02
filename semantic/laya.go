@@ -366,11 +366,11 @@ func (a *Analyzer) validateGate(flowName, src string, call *ast.Node, outs []bra
 				continue
 			}
 			if q.Type == laya.TypeNumber {
-				iv, ok := laya.ParseRangeLabel(o.label)
-				if !ok {
+				iv, err := laya.CheckRangeLabel(o.label)
+				if err != nil {
 					a.errorf(DiagLaya+"-002", o.edge.Pos.Line, o.edge.Pos.Col,
-						"flow %q: gate %q: question %q is a number; branch [%s] must be a range (<v, <=v, >v, >=v, a..b)",
-						flowName, src, q.ID, o.label)
+						"flow %q: gate %q: question %q is a number; branch [%s]: %v",
+						flowName, src, q.ID, strings.TrimPrefix(o.label, "range:"), err)
 					continue
 				}
 				for _, prev := range ranges {

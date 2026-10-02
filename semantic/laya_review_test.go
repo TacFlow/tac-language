@@ -43,3 +43,35 @@ func TestLayaGate_ElseOnLabelledEdgeIs016(t *testing.T) {
 		}
 	}
 }
+
+const numTask = `task "n" {
+  question q: number "N?" { range: [0, 100] }
+}
+`
+
+func numGate(edges string) string {
+	return numTask + `flow "g" {
+  node "gate" -> skill laya.decide(task: "n", input: payload)
+  node "a" -> skill laya.tasks.list()
+` + edges + "  gate[*] -> a\n}\n"
+}
+
+// M-3: an empty or inverted range is TAC-LAYA-002 with a message that says
+// so (not "must be a range"); a bound that overflows a float64 is rejected.
+func TestLayaGate_RangeMessages(t *testing.T) {
+	for _, r := range []string{"50..10", "5..5", "-1..-3"} {
+		d := diagsOf(t, numGate("  gate["+r+"] -> a\n"))
+		if !hasError(d, "TAC-LAYA-002", "empty or inverted range") {
+			t.Errorf("[%s]: want TAC-LAYA-002 \"empty or inverted range\", got %v", r, d)
+		}
+	}
+	for _, r := range []string{"<1e999", "1e999..1e1000", "0..1e999", ">=-1e999"} {
+		d := diagsOf(t, numGate("  gate["+r+"] -> a\n"))
+		if !hasError(d, "TAC-LAYA-002", "not a finite number") {
+			t.Errorf("[%s]: want TAC-LAYA-002 \"not a finite number\", got %v", r, d)
+		}
+	}
+	if d := diagsOf(t, numGate("  gate[5..10] -> a\n  gate[<5] -> a\n  gate[>=10] -> a\n")); hasError(d, "TAC-LAYA-002", "") {
+		t.Errorf("valid ranges: %v", d)
+	}
+}
