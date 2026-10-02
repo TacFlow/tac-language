@@ -362,6 +362,18 @@
               "line": 3,
               "col": 7
             }
+          },
+          {
+            "id": "n2",
+            "name": "c",
+            "skill": "web_search",
+            "args": {
+              "arg0": "query"
+            },
+            "pos": {
+              "line": 4,
+              "col": 7
+            }
           }
         ],
         "edges": [
@@ -371,7 +383,7 @@
           },
           {
             "from": "n1",
-            "to": "n0",
+            "to": "n2",
             "condition": {
               "operator": "\u003e",
               "left": {
@@ -387,7 +399,7 @@
           },
           {
             "from": "",
-            "to": "n1"
+            "to": "n2"
           }
         ],
         "manifest": {
@@ -401,39 +413,22 @@
             {
               "skill": "web_search",
               "node": "b"
+            },
+            {
+              "skill": "web_search",
+              "node": "c"
             }
           ],
-          "node_count": 2,
+          "node_count": 3,
           "edge_count": 3
         }
       }
     ],
     "diags": [
       {
-        "code": "TAC-GRAPH-001",
-        "severity": "error",
-        "line": 0,
-        "col": 0,
-        "message": "flow \"f\": cycle detected in dependency graph: a"
-      },
-      {
-        "code": "TAC-GRAPH-003",
-        "severity": "warning",
-        "line": 2,
-        "col": 7,
-        "message": "flow \"f\": node \"a\" is unreachable (not started by any trigger or entry)"
-      },
-      {
-        "code": "TAC-GRAPH-003",
-        "severity": "warning",
-        "line": 3,
-        "col": 7,
-        "message": "flow \"f\": node \"b\" is unreachable (not started by any trigger or entry)"
-      },
-      {
         "code": "",
         "severity": "error",
-        "line": 5,
+        "line": 6,
         "col": 34,
         "message": "flow \"f\": edge references undeclared source node \"junk\""
       }
