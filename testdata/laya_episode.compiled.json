@@ -1,0 +1,56 @@
+{
+  "flows": [],
+  "tasks": [],
+  "models": [],
+  "episodes": [
+    {
+      "id": "evt-c1-estoque-0007-a",
+      "group_id": "conv-estoque-reposicao-2026-10",
+      "state": {
+        "cache_available": false,
+        "context": {
+          "consumo_medio_dia": 6,
+          "estoque_atual": 2,
+          "lead_time_dias": 3,
+          "pedido_em_aberto": false,
+          "ponto_reposicao": 10,
+          "sku": "REF-2L-COLA",
+          "validade_dias": 180
+        },
+        "fresh_result_required": true,
+        "goal": "decidir se reabastece o SKU antes do próximo ciclo de compra",
+        "regra_declarada": "reabastecer SE estoque_atual \u003c ponto_reposicao E pedido_em_aberto == false",
+        "tool": "estoque.consultar_sku"
+      },
+      "questions": [
+        {
+          "id": "acao",
+          "type": "choice",
+          "instructions": "Qual ação o agente deve tomar neste passo?",
+          "options": [
+            {
+              "label": "proceed",
+              "description": "executar o passo agora (dado ausente/obsoleto)"
+            },
+            {
+              "label": "reuse",
+              "description": "usar resultado em cache válido"
+            },
+            {
+              "label": "skip",
+              "description": "passo provadamente desnecessário"
+            },
+            {
+              "label": "ask",
+              "description": "ambíguo, faltam dados ou risco/custo sem justificação"
+            }
+          ]
+        }
+      ],
+      "targets": {
+        "acao": "proceed"
+      }
+    }
+  ],
+  "datasets": []
+}
