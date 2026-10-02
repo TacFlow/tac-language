@@ -836,11 +836,12 @@ func (a *Analyzer) validateSkillCall(call *ast.Node, flowName, nodeName string) 
 	}
 }
 
-// checkArgsOnce reports an argument given more than once. The compiler
+// checkArgsOnce warns about an argument given more than once. The compiler
 // keeps a named argument under its own name and a positional one as
-// arg<i> (compileArgs), all in one map, so a second value would replace the
-// first in silence: `s(q: 1, q: 2)`, `s(q: 1) { q: 2 }`, `s(1, arg0: 2)`.
-// Known and unknown skills alike.
+// arg<i> (compileArgs), all in one map, so the last value in the source
+// replaces the earlier ones: `s(q: 1, q: 2)`, `s(q: 1) { q: 2 }`,
+// `s(1, arg0: 2)`. A warning, not an error: v0.4 compiled such sources and
+// v0.5 still does, with the same IR. Known and unknown skills alike.
 func (a *Analyzer) checkArgsOnce(call *ast.Node, flowName, nodeName string) {
 	seen := make(map[string]bool)
 	pos := 0
@@ -854,7 +855,7 @@ func (a *Analyzer) checkArgsOnce(call *ast.Node, flowName, nodeName string) {
 			pos++
 		}
 		if seen[key] {
-			a.errorf("", arg.Pos.Line, arg.Pos.Col,
+			a.warningf("", arg.Pos.Line, arg.Pos.Col,
 				"flow %q node %q: argument %q is given more than once; keep one", flowName, nodeName, key)
 		}
 		seen[key] = true
@@ -870,7 +871,7 @@ func (a *Analyzer) checkArgsOnce(call *ast.Node, flowName, nodeName string) {
 			if v := call.Attrs[k]; v != nil {
 				p = v.Pos
 			}
-			a.errorf("", p.Line, p.Col,
+			a.warningf("", p.Line, p.Col,
 				"flow %q node %q: argument %q is given more than once; keep one", flowName, nodeName, k)
 		}
 	}

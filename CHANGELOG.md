@@ -12,6 +12,7 @@ All notable changes to the TAC Language will be documented in this file.
 - 13 `laya.*` skills in the standard library (`skills.json` lists them).
 - Diagnostics TAC-LAYA-001…014, 016, 017, TAC-PARSE-001 (a form the parser skipped — no longer silent), TAC-VER-001, TAC-EVT-002, TAC-SCHED-001/002, TAC-TYPE-001. TAC-LAYA-015 (gate or labelled edge in a lateral position) is dialect-only: this compiler has no lateral edges (`~>`). TAC-LAYA-016 also covers `else:` on a labelled edge (the fallback leaves the gate without a label).
 - Also errors (no code): a number literal that overflows a float64 (`1e999`); `requires` that is not a dotted version (`"banana"`) or that appears twice. A range branch that is empty or inverted (`[5..5]`, `[50..10]`) or has a non-finite bound is TAC-LAYA-002 and says so.
+- Warning (no code): an argument given more than once (`s(q: 1, q: 2)`, `s(q: 1) { q: 2 }`, `s("q", arg0: "r")`) — the last value in the source wins, as before; a warning, not an error, so v0.4 sources that do this still compile to the same IR.
 - IR 1.2: edge `label`/`range`, flow `requires` (stamped automatically) and `schedules`. `tac compile --json` prints the whole program; `tac episode` prints a declared episode; `--tasks <file>` gives the analyzer a task registry.
 - Lexer: `*`, `..`, negative number literals, scientific notation (`1e3`, `2.5E-4`).
 
