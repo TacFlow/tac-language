@@ -57,7 +57,7 @@ func main() {
 
 	case "episode":
 		if len(os.Args) < 3 {
-			fmt.Fprintln(os.Stderr, "Usage: tac episode <input.tac> [--id <episode id>]")
+			fmt.Fprintln(os.Stderr, "Usage: tac episode <input.tac> [--id <episode id>] [--mode production|development] [--registry <file.json>] [--tasks <file.json>]")
 			os.Exit(1)
 		}
 		os.Exit(cmdEpisode(os.Args[2], flagValue(os.Args[2:], "--id")))
@@ -115,7 +115,8 @@ Usage:
   tac compile <input.tac> [flags]        Parse, validate, and output Flow JSON
   tac fmt <input.tac>                    Format .tac source (canonical style)
   tac validate <input.tac> [flags]       Parse and run semantic analysis
-  tac episode <input.tac> [--id <id>]    Print a declared LAYA episode as JSON
+  tac episode <input.tac> [flags]        Print a declared LAYA episode as JSON
+                                         (--id <id> picks one of several)
   tac inspect <input.tac>                Show flow structure summary
   tac fingerprint <input.tac> [flags]    Show flow compilation fingerprint
   tac version                            Print version
@@ -497,29 +498,37 @@ func mustLoadTasks() []laya.Task {
 }
 
 // printDiags writes every diagnostic to stderr (errors and warnings).
-func printDiags(diags []semantic.Diagnostic) {
+func printDiags(diags []semantic.Diagnostic) { fprintDiags(os.Stderr, diags) }
+
+func fprintDiags(w io.Writer, diags []semantic.Diagnostic) {
 	for _, d := range diags {
 		if d.Severity == semantic.SeverityError {
-			fmt.Fprintf(os.Stderr, "  %s\n", d)
+			fmt.Fprintf(w, "  %s\n", d)
 		} else {
-			fmt.Fprintf(os.Stderr, "Warning: %s\n", d)
+			fmt.Fprintf(w, "Warning: %s\n", d)
 		}
 	}
 }
 
 // cmdEpisode implements `tac episode`; it returns the exit code.
 func cmdEpisode(path, id string) int {
+	return runEpisode(path, id, os.Stdout, os.Stderr)
+}
+
+// runEpisode is `tac episode` writing to stdout/stderr; the flags come from
+// os.Args like every other command's.
+func runEpisode(path, id string, stdout, stderr io.Writer) int {
 	source, err := readSource(path)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		fmt.Fprintf(stderr, "Error: %v\n", err)
 		return 1
 	}
-	out, diags, err := episodeJSON(source, id)
-	printDiags(diags)
+	out, diags, err := episodeJSON(source, id, loadRegistry(), mustLoadTasks(), parseMode())
+	fprintDiags(stderr, diags)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		fmt.Fprintf(stderr, "Error: %v\n", err)
 		return 1
 	}
-	fmt.Println(string(out))
+	fmt.Fprintln(stdout, string(out))
 	return 0
 }

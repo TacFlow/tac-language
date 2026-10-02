@@ -76,13 +76,18 @@ func programJSON(src string, reg *semantic.Registry, tasks []laya.Task, mode sem
 }
 
 // episodeJSON is `tac episode`: the bare episode of the file (or the one
-// named by id), indented. More than one episode needs --id.
-func episodeJSON(src, id string) ([]byte, []semantic.Diagnostic, error) {
+// named by id), indented. More than one episode needs --id. The file is
+// validated as `tac compile` validates it: reg (--registry, nil for the
+// builtins), tasks (--tasks) and mode (--mode).
+func episodeJSON(src, id string, reg *semantic.Registry, tasks []laya.Task, mode semantic.Mode) ([]byte, []semantic.Diagnostic, error) {
 	program, err := parser.ParseSource(src)
 	if err != nil {
 		return nil, nil, err
 	}
-	a := semantic.New()
+	a := semantic.NewWithRegistry(reg, mode)
+	if tasks != nil {
+		a.SetTasks(tasks)
+	}
 	diags := a.Analyze(program)
 	if a.HasErrors() {
 		return nil, diags, fmt.Errorf("semantic validation failed with %d errors", len(a.Errors()))

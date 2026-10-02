@@ -31,7 +31,7 @@ func canon(t *testing.T, b []byte) string {
 
 // `tac episode examples/laya_episode.tac` ≡ the reference JSON (DESIGN §5.5).
 func TestEpisodeCommand_ReferenceGolden(t *testing.T) {
-	out, _, err := episodeJSON(read(t, "../../examples/laya_episode.tac"), "")
+	out, _, err := episodeJSON(read(t, "../../examples/laya_episode.tac"), "", nil, nil, semantic.ModeDevelopment)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -42,17 +42,17 @@ func TestEpisodeCommand_ReferenceGolden(t *testing.T) {
 
 func TestEpisodeCommand_SelectionRules(t *testing.T) {
 	src := read(t, "../../examples/laya_dataset.tac")
-	if _, _, err := episodeJSON(src, ""); err == nil || !strings.Contains(err.Error(), "--id") {
+	if _, _, err := episodeJSON(src, "", nil, nil, semantic.ModeDevelopment); err == nil || !strings.Contains(err.Error(), "--id") {
 		t.Fatalf("3 episodes without --id: err = %v, want a hint about --id", err)
 	}
-	out, _, err := episodeJSON(src, "ds-estoque-002")
+	out, _, err := episodeJSON(src, "ds-estoque-002", nil, nil, semantic.ModeDevelopment)
 	if err != nil || !strings.Contains(string(out), `"ds-estoque-002"`) {
 		t.Fatalf("--id ds-estoque-002: %v %s", err, out)
 	}
-	if _, _, err := episodeJSON(src, "nope"); err == nil {
+	if _, _, err := episodeJSON(src, "nope", nil, nil, semantic.ModeDevelopment); err == nil {
 		t.Fatal("unknown --id must fail")
 	}
-	if _, _, err := episodeJSON(read(t, "../../examples/laya_gate.tac"), ""); err == nil {
+	if _, _, err := episodeJSON(read(t, "../../examples/laya_gate.tac"), "", nil, nil, semantic.ModeDevelopment); err == nil {
 		t.Fatal("a file without episodes must fail")
 	}
 }
