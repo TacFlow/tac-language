@@ -773,6 +773,7 @@ func (a *Analyzer) validateNodeDef(node *ast.Node, flowName string, declared map
 // In development mode unknown skills are warnings; in production they are errors.
 // Dynamic skills require digest + signature + schemas in production.
 func (a *Analyzer) validateSkillCall(call *ast.Node, flowName, nodeName string) {
+	a.checkArgsOnce(call, flowName, nodeName)
 	skillName := call.Value
 	version := call.Version
 	spec, ok := a.registry.LookupVersioned(skillName, version)
@@ -831,6 +832,46 @@ func (a *Analyzer) validateSkillCall(call *ast.Node, flowName, nodeName string) 
 					"flow %q node %q: skill %q does not declare argument %q (known: %s)",
 					flowName, nodeName, skillName, arg.Value, strings.Join(spec.Args, ", "))
 			}
+		}
+	}
+}
+
+// checkArgsOnce reports an argument given more than once. The compiler
+// keeps a named argument under its own name and a positional one as
+// arg<i> (compileArgs), all in one map, so a second value would replace the
+// first in silence: `s(q: 1, q: 2)`, `s(q: 1) { q: 2 }`, `s(1, arg0: 2)`.
+// Known and unknown skills alike.
+func (a *Analyzer) checkArgsOnce(call *ast.Node, flowName, nodeName string) {
+	seen := make(map[string]bool)
+	pos := 0
+	for _, arg := range call.Args {
+		if arg == nil {
+			continue
+		}
+		key := arg.Value
+		if arg.Type != ast.NodeNamedArg {
+			key = fmt.Sprintf("arg%d", pos)
+			pos++
+		}
+		if seen[key] {
+			a.errorf("", arg.Pos.Line, arg.Pos.Col,
+				"flow %q node %q: argument %q is given more than once; keep one", flowName, nodeName, key)
+		}
+		seen[key] = true
+	}
+	keys := make([]string, 0, len(call.Attrs))
+	for k := range call.Attrs {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		if seen[k] {
+			p := call.Pos
+			if v := call.Attrs[k]; v != nil {
+				p = v.Pos
+			}
+			a.errorf("", p.Line, p.Col,
+				"flow %q node %q: argument %q is given more than once; keep one", flowName, nodeName, k)
 		}
 	}
 }
