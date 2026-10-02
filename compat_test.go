@@ -282,3 +282,68 @@ func TestCompat_V04SourcesCompileUnchanged(t *testing.T) {
 		}
 	}
 }
+
+// testdata/compat/recovery/v0.4.0.json was written ONCE by the v0.4.0
+// compiler (main@e185d55, the compileForCompat of this file) for the
+// sources next to it: v0.4 sources with forms the parser cannot read. v0.4
+// skipped such a form one token at a time and resumed at the next item, so
+// `step: a -> b` kept the edge. v0.5 reports the form (TAC-PARSE-001) and
+// must resume at exactly the same place: the IR is identical, and the only
+// added diagnostics are TAC-PARSE-001 warnings.
+const compatRecoveryBaselinePath = "testdata/compat/recovery/v0.4.0.json"
+
+func TestCompat_V04ErrorRecoveryUnchanged(t *testing.T) {
+	b, err := os.ReadFile(compatRecoveryBaselinePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var baseline map[string]compatEntry
+	if err := json.Unmarshal(b, &baseline); err != nil {
+		t.Fatal(err)
+	}
+	if len(baseline) != 8 {
+		t.Fatalf("recovery baseline has %d sources, want 8", len(baseline))
+	}
+	for name, old := range baseline {
+		src, err := os.ReadFile(name)
+		if err != nil {
+			t.Errorf("%s: %v", name, err)
+			continue
+		}
+		cur := compileForCompat(t, string(src))
+		of, nf := normalizeCompatFlows(t, old.Flows, true), normalizeCompatFlows(t, cur.Flows, false)
+		if len(of) != len(nf) {
+			t.Errorf("%s: %d flows, v0.4 had %d", name, len(nf), len(of))
+			continue
+		}
+		for i := range of {
+			if of[i].rest != nf[i].rest {
+				t.Errorf("%s flow %d changed:\n was %s\n now %s", name, i, of[i].rest, nf[i].rest)
+			}
+			if strings.Join(nf[i].edges, ",") != strings.Join(of[i].edges, ",") {
+				t.Errorf("%s flow %d edges = %v, v0.4 had %v", name, i, nf[i].edges, of[i].edges)
+			}
+			if !reflect.DeepEqual(of[i].args, nf[i].args) {
+				t.Errorf("%s flow %d: argument names %v, v0.4 had %v", name, i, nf[i].args, of[i].args)
+			}
+			if nf[i].edgeCount != of[i].edgeCount {
+				t.Errorf("%s flow %d manifest.edge_count = %v, was %v", name, i, nf[i].edgeCount, of[i].edgeCount)
+			}
+		}
+		var rest []compatDiag
+		parse001 := 0
+		for _, d := range cur.Diags {
+			if d.Code == "TAC-PARSE-001" && d.Severity == "warning" {
+				parse001++
+				continue
+			}
+			rest = append(rest, d)
+		}
+		if parse001 == 0 {
+			t.Errorf("%s: the unreadable forms are not reported (TAC-PARSE-001)", name)
+		}
+		if !reflect.DeepEqual(diagKeys(old.Diags), diagKeys(rest)) {
+			t.Errorf("%s: diagnostics changed:\n was %v\n now %v", name, diagKeys(old.Diags), diagKeys(rest))
+		}
+	}
+}

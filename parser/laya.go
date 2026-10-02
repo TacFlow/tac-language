@@ -26,11 +26,15 @@ func tokText(t lexer.Token) string {
 	return t.String()
 }
 
-// unrecognized consumes a form the parser cannot read — up to the end of the
-// line outside braces, or an unmatched '}' (which belongs to the enclosing
-// block) — and returns a node recording it. Only `{ }` can carry the form
-// over several lines: an unclosed '(' or '[' never swallows the next line.
-// It always consumes at least one token, so no caller can loop on it.
+// unrecognized consumes a form the parser cannot read inside a v0.5
+// declaration body — up to the end of the line outside braces, or an
+// unmatched '}' (which belongs to the enclosing block) — and returns a node
+// recording it. Only `{ }` can carry the form over several lines: an
+// unclosed '(' or '[' never swallows the next line. It always consumes at
+// least one token, so no caller can loop on it.
+//
+// Flows, context blocks and the top level use skipUnrecognized instead:
+// there v0.4 sources must recover exactly as v0.4 did.
 func (p *Parser) unrecognized() *ast.Node {
 	tok := p.peek()
 	n := ast.NewNode(ast.NodeUnrecognized, tok.Line, tok.Col)
@@ -56,6 +60,89 @@ func (p *Parser) unrecognized() *ast.Node {
 		p.advance()
 		first = false
 	}
+}
+
+// skipUnrecognized consumes a form the parser cannot read in a flow body, a
+// context block or at the top level, and returns a node recording it
+// (TAC-PARSE-001). v0.4 skipped such a form one token at a time and resumed
+// at the first token that starts an item, so `step: a -> b` kept its edge;
+// skipUnrecognized stops at exactly those tokens (resume reports them), and
+// also at a newline or a '}' (which the caller handles as v0.4 did: a '}'
+// closes a flow or context block even inside the unreadable form). It
+// always consumes at least one token, so no caller can loop on it.
+func (p *Parser) skipUnrecognized(resume func() bool) *ast.Node {
+	tok := p.peek()
+	n := ast.NewNode(ast.NodeUnrecognized, tok.Line, tok.Col)
+	n.Value = tokText(tok)
+	p.advance()
+	for {
+		switch p.peek().Type {
+		case lexer.EOF, lexer.Newline, lexer.RBrace:
+			return n
+		}
+		if resume() {
+			return n
+		}
+		p.advance()
+	}
+}
+
+// nextSignificant returns the type of the first token after the current
+// one that is not a newline.
+func (p *Parser) nextSignificant() lexer.TokenType {
+	for i := p.pos + 1; i < len(p.tokens); i++ {
+		if p.tokens[i].Type != lexer.Newline {
+			return p.tokens[i].Type
+		}
+	}
+	return lexer.EOF
+}
+
+// flowItemStart reports whether the current token starts a flow item:
+// what parseFlowBody does not hand to skipUnrecognized.
+func (p *Parser) flowItemStart() bool {
+	tok := p.peek()
+	if tok.Type != lexer.Ident {
+		return false
+	}
+	switch tok.Value {
+	case "node", "input", "agent", "on", "remember", "recall":
+		return true
+	case "schedule":
+		if p.pos+1 < len(p.tokens) && p.tokens[p.pos+1].Type == lexer.String {
+			return true
+		}
+	}
+	// an edge, `a -> b` (v0.4: also across newlines), or `gate[branch] -> b`
+	next := p.nextSignificant()
+	return next == lexer.Arrow || next == lexer.LBrack
+}
+
+// topItemStart reports whether the current token starts a top-level item.
+func (p *Parser) topItemStart() bool {
+	tok := p.peek()
+	if tok.Type != lexer.Ident {
+		return false
+	}
+	switch tok.Value {
+	case "flow", "context", "remember", "recall", "relate", "forget", "auto_summarize":
+		return true
+	}
+	return p.isDeclStart()
+}
+
+// contextItemStart reports whether the current token starts an item of a
+// context block.
+func (p *Parser) contextItemStart() bool {
+	tok := p.peek()
+	if tok.Type != lexer.Ident {
+		return false
+	}
+	switch tok.Value {
+	case "remember", "flow", "recall":
+		return true
+	}
+	return false
 }
 
 func (p *Parser) parseString() *ast.Node {
@@ -140,12 +227,12 @@ func (p *Parser) parseLabelledEdge(srcTok lexer.Token) ([]*ast.Node, *ast.Node) 
 	branch := p.parseBranch()
 	if branch == nil || p.peek().Type != lexer.RBrack {
 		p.pos = save - 1
-		return nil, p.unrecognized()
+		return nil, p.skipUnrecognized(p.flowItemStart)
 	}
 	p.advance() // ]
 	if p.peek().Type != lexer.Arrow {
 		p.pos = save - 1
-		return nil, p.unrecognized()
+		return nil, p.skipUnrecognized(p.flowItemStart)
 	}
 	return p.parseEdgeChainLabelled(srcTok, branch), nil
 }
@@ -156,7 +243,7 @@ func (p *Parser) parseSchedule() *ast.Node {
 	kw := p.advance()
 	if p.peek().Type != lexer.String {
 		p.pos = save
-		return p.unrecognized()
+		return p.skipUnrecognized(p.flowItemStart)
 	}
 	n := ast.NewNode(ast.NodeSchedule, kw.Line, kw.Col)
 	n.Children = append(n.Children, p.parseString())

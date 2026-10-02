@@ -688,11 +688,11 @@ func (p *Parser) parseFlowBody() (*ast.Node, error) {
 				}
 			default:
 				p.pos = start
-				flow.Children = append(flow.Children, p.unrecognized())
+				flow.Children = append(flow.Children, p.skipUnrecognized(p.flowItemStart))
 			}
 
 		default:
-			flow.Children = append(flow.Children, p.unrecognized())
+			flow.Children = append(flow.Children, p.skipUnrecognized(p.flowItemStart))
 		}
 
 		p.skipNewlines()
@@ -818,7 +818,7 @@ func (p *Parser) Parse() (*ast.Node, error) {
 						ctx.Children = append(ctx.Children, p.parseRecallStmt())
 					default:
 						// v0.5: recorded (TAC-PARSE-001) instead of skipped.
-						ctx.Children = append(ctx.Children, p.unrecognized())
+						ctx.Children = append(ctx.Children, p.skipUnrecognized(p.contextItemStart))
 					}
 					p.skipNewlines()
 				}
@@ -873,7 +873,7 @@ func (p *Parser) Parse() (*ast.Node, error) {
 		default:
 			// v0.4 skipped unrecognised top-level tokens in silence; v0.5
 			// records the form (TAC-PARSE-001).
-			program.Nodes = append(program.Nodes, p.unrecognized())
+			program.Nodes = append(program.Nodes, p.skipUnrecognized(p.topItemStart))
 		}
 
 		p.skipNewlines()

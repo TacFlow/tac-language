@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/TacFlow/tac-language/ast"
@@ -52,9 +53,17 @@ func TestParse_LabelledEdges(t *testing.T) {
 }
 
 // A malformed branch is recorded (TAC-PARSE-001), never silently dropped,
-// and the rest of the flow still parses.
+// and the rest of the flow still parses. Recovery resumes where v0.4 did:
+// in `gate[proceed -> a`, v0.4 skipped `gate` and `[` and kept the edge
+// `proceed -> a`.
 func TestParse_MalformedBranchIsUnrecognized(t *testing.T) {
-	for _, line := range []string{"gate[] -> a", "gate[5] -> a", "gate[proceed -> a", "gate[proceed]", "gate[<] -> a"} {
+	for line, want := range map[string]string{
+		"gate[] -> a":       "x>y",
+		"gate[5] -> a":      "x>y",
+		"gate[proceed -> a": "proceed>a,x>y",
+		"gate[proceed]":     "x>y",
+		"gate[<] -> a":      "x>y",
+	} {
 		prog := mustParse(t, "flow \"g\" {\n  "+line+"\n  x -> y\n}")
 		f := ast.CollectFlows(prog)[0]
 		n := 0
@@ -63,8 +72,12 @@ func TestParse_MalformedBranchIsUnrecognized(t *testing.T) {
 				n++
 			}
 		}
-		if n != 1 || len(f.Edges) != 1 || ast.EdgeSource(f.Edges[0]) != "x" {
-			t.Errorf("%q: unrecognized=%d edges=%d", line, n, len(f.Edges))
+		var edges []string
+		for _, e := range f.Edges {
+			edges = append(edges, ast.EdgeSource(e)+">"+ast.EdgeTarget(e))
+		}
+		if n != 1 || strings.Join(edges, ",") != want {
+			t.Errorf("%q: unrecognized=%d edges=%v, want 1 and %s", line, n, edges, want)
 		}
 	}
 }

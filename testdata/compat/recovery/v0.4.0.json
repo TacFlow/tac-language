@@ -1,0 +1,699 @@
+{
+  "testdata/compat/recovery/assignment_then_node.tac": {
+    "flows": [
+      {
+        "flow_id": "",
+        "name": "f",
+        "version": "1.0",
+        "language": {
+          "name": "TAC",
+          "language_version": "0.4",
+          "compiler_version": "0.4.0",
+          "ir_version": "1.1"
+        },
+        "nodes": [
+          {
+            "id": "n0",
+            "name": "a",
+            "skill": "web_search",
+            "args": {
+              "arg0": "query"
+            },
+            "pos": {
+              "line": 2,
+              "col": 7
+            }
+          },
+          {
+            "id": "n1",
+            "name": "c",
+            "skill": "web_search",
+            "args": {
+              "arg0": "query"
+            },
+            "pos": {
+              "line": 3,
+              "col": 13
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "n0",
+            "to": "n1"
+          }
+        ],
+        "manifest": {
+          "name": "f",
+          "version": "1.0",
+          "skills": [
+            {
+              "skill": "web_search",
+              "node": "a"
+            },
+            {
+              "skill": "web_search",
+              "node": "c"
+            }
+          ],
+          "node_count": 2,
+          "edge_count": 1
+        }
+      }
+    ],
+    "diags": []
+  },
+  "testdata/compat/recovery/braces_close_flow.tac": {
+    "flows": [
+      {
+        "flow_id": "",
+        "name": "f",
+        "version": "1.0",
+        "language": {
+          "name": "TAC",
+          "language_version": "0.4",
+          "compiler_version": "0.4.0",
+          "ir_version": "1.1"
+        },
+        "nodes": [
+          {
+            "id": "n0",
+            "name": "a",
+            "skill": "web_search",
+            "args": {
+              "arg0": "query"
+            },
+            "pos": {
+              "line": 2,
+              "col": 7
+            }
+          },
+          {
+            "id": "n1",
+            "name": "b",
+            "skill": "web_search",
+            "args": {
+              "arg0": "query"
+            },
+            "pos": {
+              "line": 3,
+              "col": 7
+            }
+          }
+        ],
+        "edges": [],
+        "manifest": {
+          "name": "f",
+          "version": "1.0",
+          "skills": [
+            {
+              "skill": "web_search",
+              "node": "a"
+            },
+            {
+              "skill": "web_search",
+              "node": "b"
+            }
+          ],
+          "node_count": 2,
+          "edge_count": 0
+        }
+      }
+    ],
+    "diags": []
+  },
+  "testdata/compat/recovery/braces_same_line.tac": {
+    "flows": [
+      {
+        "flow_id": "",
+        "name": "f",
+        "version": "1.0",
+        "language": {
+          "name": "TAC",
+          "language_version": "0.4",
+          "compiler_version": "0.4.0",
+          "ir_version": "1.1"
+        },
+        "nodes": [
+          {
+            "id": "n0",
+            "name": "a",
+            "skill": "web_search",
+            "args": {
+              "arg0": "query"
+            },
+            "pos": {
+              "line": 2,
+              "col": 7
+            }
+          },
+          {
+            "id": "n1",
+            "name": "b",
+            "skill": "web_search",
+            "args": {
+              "arg0": "query"
+            },
+            "pos": {
+              "line": 3,
+              "col": 7
+            }
+          }
+        ],
+        "edges": [],
+        "manifest": {
+          "name": "f",
+          "version": "1.0",
+          "skills": [
+            {
+              "skill": "web_search",
+              "node": "a"
+            },
+            {
+              "skill": "web_search",
+              "node": "b"
+            }
+          ],
+          "node_count": 2,
+          "edge_count": 0
+        }
+      }
+    ],
+    "diags": []
+  },
+  "testdata/compat/recovery/colon_label.tac": {
+    "flows": [
+      {
+        "flow_id": "",
+        "name": "f",
+        "version": "1.0",
+        "language": {
+          "name": "TAC",
+          "language_version": "0.4",
+          "compiler_version": "0.4.0",
+          "ir_version": "1.1"
+        },
+        "nodes": [
+          {
+            "id": "n0",
+            "name": "a",
+            "skill": "web_search",
+            "args": {
+              "arg0": "query"
+            },
+            "pos": {
+              "line": 2,
+              "col": 7
+            }
+          },
+          {
+            "id": "n1",
+            "name": "b",
+            "skill": "web_search",
+            "args": {
+              "arg0": "query"
+            },
+            "pos": {
+              "line": 3,
+              "col": 7
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "n0",
+            "to": "n1"
+          }
+        ],
+        "manifest": {
+          "name": "f",
+          "version": "1.0",
+          "skills": [
+            {
+              "skill": "web_search",
+              "node": "a"
+            },
+            {
+              "skill": "web_search",
+              "node": "b"
+            }
+          ],
+          "node_count": 2,
+          "edge_count": 1
+        }
+      }
+    ],
+    "diags": []
+  },
+  "testdata/compat/recovery/context_block.tac": {
+    "flows": [
+      {
+        "flow_id": "",
+        "name": "f",
+        "version": "1.0",
+        "language": {
+          "name": "TAC",
+          "language_version": "0.4",
+          "compiler_version": "0.4.0",
+          "ir_version": "1.1"
+        },
+        "nodes": [
+          {
+            "id": "n0",
+            "name": "a",
+            "skill": "web_search",
+            "args": {
+              "arg0": "query"
+            },
+            "pos": {
+              "line": 3,
+              "col": 29
+            }
+          }
+        ],
+        "edges": [],
+        "manifest": {
+          "name": "f",
+          "version": "1.0",
+          "skills": [
+            {
+              "skill": "web_search",
+              "node": "a"
+            }
+          ],
+          "node_count": 1,
+          "edge_count": 0
+        }
+      },
+      {
+        "flow_id": "",
+        "name": "g",
+        "version": "1.0",
+        "language": {
+          "name": "TAC",
+          "language_version": "0.4",
+          "compiler_version": "0.4.0",
+          "ir_version": "1.1"
+        },
+        "nodes": [
+          {
+            "id": "n0",
+            "name": "b",
+            "skill": "web_search",
+            "args": {
+              "arg0": "query"
+            },
+            "pos": {
+              "line": 5,
+              "col": 16
+            }
+          }
+        ],
+        "edges": [],
+        "manifest": {
+          "name": "g",
+          "version": "1.0",
+          "skills": [
+            {
+              "skill": "web_search",
+              "node": "b"
+            }
+          ],
+          "node_count": 1,
+          "edge_count": 0
+        }
+      }
+    ],
+    "diags": []
+  },
+  "testdata/compat/recovery/edge_tails.tac": {
+    "flows": [
+      {
+        "flow_id": "",
+        "name": "f",
+        "version": "1.0",
+        "language": {
+          "name": "TAC",
+          "language_version": "0.4",
+          "compiler_version": "0.4.0",
+          "ir_version": "1.1"
+        },
+        "nodes": [
+          {
+            "id": "n0",
+            "name": "a",
+            "skill": "web_search",
+            "args": {
+              "arg0": "query"
+            },
+            "pos": {
+              "line": 2,
+              "col": 7
+            }
+          },
+          {
+            "id": "n1",
+            "name": "b",
+            "skill": "web_search",
+            "args": {
+              "arg0": "query"
+            },
+            "pos": {
+              "line": 3,
+              "col": 7
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "n0",
+            "to": "n1"
+          },
+          {
+            "from": "n1",
+            "to": "n0",
+            "condition": {
+              "operator": "\u003e",
+              "left": {
+                "kind": "node_output",
+                "node": "a",
+                "path": "score"
+              },
+              "right": {
+                "kind": "number",
+                "value": 1
+              }
+            }
+          },
+          {
+            "from": "",
+            "to": "n1"
+          }
+        ],
+        "manifest": {
+          "name": "f",
+          "version": "1.0",
+          "skills": [
+            {
+              "skill": "web_search",
+              "node": "a"
+            },
+            {
+              "skill": "web_search",
+              "node": "b"
+            }
+          ],
+          "node_count": 2,
+          "edge_count": 3
+        }
+      }
+    ],
+    "diags": [
+      {
+        "code": "TAC-GRAPH-001",
+        "severity": "error",
+        "line": 0,
+        "col": 0,
+        "message": "flow \"f\": cycle detected in dependency graph: a"
+      },
+      {
+        "code": "TAC-GRAPH-003",
+        "severity": "warning",
+        "line": 2,
+        "col": 7,
+        "message": "flow \"f\": node \"a\" is unreachable (not started by any trigger or entry)"
+      },
+      {
+        "code": "TAC-GRAPH-003",
+        "severity": "warning",
+        "line": 3,
+        "col": 7,
+        "message": "flow \"f\": node \"b\" is unreachable (not started by any trigger or entry)"
+      },
+      {
+        "code": "",
+        "severity": "error",
+        "line": 5,
+        "col": 34,
+        "message": "flow \"f\": edge references undeclared source node \"junk\""
+      }
+    ]
+  },
+  "testdata/compat/recovery/flow_items.tac": {
+    "flows": [
+      {
+        "flow_id": "",
+        "name": "f",
+        "version": "1.0",
+        "language": {
+          "name": "TAC",
+          "language_version": "0.4",
+          "compiler_version": "0.4.0",
+          "ir_version": "1.1"
+        },
+        "nodes": [
+          {
+            "id": "n0",
+            "name": "a",
+            "skill": "web_search",
+            "args": {
+              "arg0": "query"
+            },
+            "pos": {
+              "line": 2,
+              "col": 7
+            }
+          },
+          {
+            "id": "n1",
+            "name": "b",
+            "skill": "web_search",
+            "args": {
+              "arg0": "query"
+            },
+            "pos": {
+              "line": 3,
+              "col": 7
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "n0",
+            "to": "n1"
+          },
+          {
+            "from": "",
+            "to": "n1"
+          },
+          {
+            "from": "n0",
+            "to": "n1"
+          }
+        ],
+        "triggers": [
+          {
+            "event": "e",
+            "targets": [
+              "n0"
+            ]
+          }
+        ],
+        "manifest": {
+          "name": "f",
+          "version": "1.0",
+          "inputs": [
+            {
+              "name": "q",
+              "trust_type": "Untrusted",
+              "required": true
+            }
+          ],
+          "skills": [
+            {
+              "skill": "web_search",
+              "node": "a"
+            },
+            {
+              "skill": "web_search",
+              "node": "b"
+            }
+          ],
+          "agents": [
+            {
+              "name": "z"
+            }
+          ],
+          "node_count": 2,
+          "edge_count": 3
+        }
+      }
+    ],
+    "diags": [
+      {
+        "code": "",
+        "severity": "error",
+        "line": 10,
+        "col": 10,
+        "message": "flow \"f\": edge references undeclared source node \"bar\""
+      }
+    ]
+  },
+  "testdata/compat/recovery/top_level.tac": {
+    "flows": [
+      {
+        "flow_id": "",
+        "name": "f",
+        "version": "1.0",
+        "language": {
+          "name": "TAC",
+          "language_version": "0.4",
+          "compiler_version": "0.4.0",
+          "ir_version": "1.1"
+        },
+        "nodes": [
+          {
+            "id": "n0",
+            "name": "a",
+            "skill": "web_search",
+            "args": {
+              "arg0": "query"
+            },
+            "pos": {
+              "line": 2,
+              "col": 7
+            }
+          }
+        ],
+        "edges": [],
+        "manifest": {
+          "name": "f",
+          "version": "1.0",
+          "skills": [
+            {
+              "skill": "web_search",
+              "node": "a"
+            }
+          ],
+          "node_count": 1,
+          "edge_count": 0
+        }
+      },
+      {
+        "flow_id": "",
+        "name": "g",
+        "version": "1.0",
+        "language": {
+          "name": "TAC",
+          "language_version": "0.4",
+          "compiler_version": "0.4.0",
+          "ir_version": "1.1"
+        },
+        "nodes": [
+          {
+            "id": "n0",
+            "name": "b",
+            "skill": "web_search",
+            "args": {
+              "arg0": "query"
+            },
+            "pos": {
+              "line": 4,
+              "col": 30
+            }
+          }
+        ],
+        "edges": [],
+        "manifest": {
+          "name": "g",
+          "version": "1.0",
+          "skills": [
+            {
+              "skill": "web_search",
+              "node": "b"
+            }
+          ],
+          "node_count": 1,
+          "edge_count": 0
+        }
+      },
+      {
+        "flow_id": "",
+        "name": "h",
+        "version": "1.0",
+        "language": {
+          "name": "TAC",
+          "language_version": "0.4",
+          "compiler_version": "0.4.0",
+          "ir_version": "1.1"
+        },
+        "nodes": [
+          {
+            "id": "n0",
+            "name": "c",
+            "skill": "web_search",
+            "args": {
+              "arg0": "query"
+            },
+            "pos": {
+              "line": 5,
+              "col": 23
+            }
+          }
+        ],
+        "edges": [],
+        "manifest": {
+          "name": "h",
+          "version": "1.0",
+          "skills": [
+            {
+              "skill": "web_search",
+              "node": "c"
+            }
+          ],
+          "node_count": 1,
+          "edge_count": 0
+        }
+      },
+      {
+        "flow_id": "",
+        "name": "i",
+        "version": "1.0",
+        "language": {
+          "name": "TAC",
+          "language_version": "0.4",
+          "compiler_version": "0.4.0",
+          "ir_version": "1.1"
+        },
+        "nodes": [
+          {
+            "id": "n0",
+            "name": "d",
+            "skill": "web_search",
+            "args": {
+              "arg0": "query"
+            },
+            "pos": {
+              "line": 6,
+              "col": 23
+            }
+          }
+        ],
+        "edges": [],
+        "manifest": {
+          "name": "i",
+          "version": "1.0",
+          "skills": [
+            {
+              "skill": "web_search",
+              "node": "d"
+            }
+          ],
+          "node_count": 1,
+          "edge_count": 0
+        }
+      }
+    ],
+    "diags": []
+  }
+}
