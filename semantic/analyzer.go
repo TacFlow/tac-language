@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"github.com/TacFlow/tac-language/ast"
+	"github.com/TacFlow/tac-language/laya"
 	"github.com/TacFlow/tac-language/types"
 )
 
@@ -419,6 +420,9 @@ type Analyzer struct {
 	inputs map[string]types.TrustType
 	// Track declared agents
 	agents map[string]bool
+	// LAYA task registry: file `task` declarations plus SetTasks.
+	tasks     map[string]laya.Task
+	registry_ bool // a registry exists (file tasks or SetTasks)
 }
 
 // New creates a new Analyzer in development mode.
@@ -518,6 +522,9 @@ func (a *Analyzer) Analyze(program *ast.Node) []Diagnostic {
 	// Pass 1: collect top-level inputs, agents
 	a.collectGlobals(program)
 
+	// Pass 1b (v0.5): LAYA declarations, requires, top-level forms.
+	a.analyzeDecls(program)
+
 	// Pass 2: validate each flow
 	for _, flow := range ast.CollectFlows(program) {
 		a.validateFlow(flow)
@@ -578,6 +585,9 @@ func (a *Analyzer) validateContext(ctx *ast.Node) {
 			a.validateRemember(child)
 		case ast.NodeRecallStmt:
 			a.validateRecall(child)
+		case ast.NodeUnrecognized:
+			a.warningf(DiagParse+"-001", child.Pos.Line, child.Pos.Col,
+				"context: unrecognized form starting at %s; it was ignored", child.Value)
 		}
 	}
 }
@@ -716,6 +726,9 @@ func (a *Analyzer) validateFlow(flow *ast.Node) {
 
 	// --- Input type names (SPEC §5.2 rule 3) ---
 	a.validateInputTypes(flow, flowName)
+
+	// --- v0.5: unrecognised forms, schedules, events, gates ---
+	a.validateLayaFlow(flow, flowName, declared)
 }
 
 // validateInputTypes warns (TAC-TYPE-001) about an input whose type is
