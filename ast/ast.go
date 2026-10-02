@@ -32,6 +32,27 @@ const (
 	NodeArrayLiteral   NodeType = "ArrayLiteral"
 	NodeKeyValue       NodeType = "KeyValue"
 	NodeNamedArg       NodeType = "NamedArg"
+
+	// v0.5 (LAYA). Nothing in a v0.4 source produces these, so v0.4 ASTs
+	// (and the testdata/*.golden.json files) are unchanged.
+	NodeRequires     NodeType = "Requires"     // requires "0.5" (Value = version)
+	NodeSchedule     NodeType = "Schedule"     // schedule "<cron>" [tz "<IANA>"]: Children[0] cron, Attrs["tz"]
+	NodeRange        NodeType = "Range"        // gate[<10] / gate[10..50]: Value = op, Children = bounds
+	NodeTaskDecl     NodeType = "TaskDecl"     // task "name" { question… profile {…} }
+	NodeModelDecl    NodeType = "ModelDecl"    // model "name" { tasks […] base "…" port N }
+	NodeEpisodeDecl  NodeType = "EpisodeDecl"  // episode "id" { … }
+	NodeDatasetDecl  NodeType = "DatasetDecl"  // dataset "name" { task "…" … }
+	NodeQuestion     NodeType = "Question"     // question id: type "instructions" [ {attrs} ] [ {options} ]
+	NodeTarget       NodeType = "Target"       // target id = value
+	NodeUnrecognized NodeType = "Unrecognized" // a form the parser skipped (TAC-PARSE-001)
+	NodeGluedNumber  NodeType = "GluedNumber"  // `3x`: a number glued to text, read as in v0.4 (TAC-PARSE-001)
+)
+
+// Pseudo-labels every gate understands besides the task's own labels.
+const (
+	LabelLowConfidence = "low_confidence"
+	LabelError         = "error"
+	LabelAny           = "*"
 )
 
 // Position represents a source location.
@@ -221,4 +242,49 @@ func ValidateNode(n *Node) error {
 		return fmt.Errorf("node at %d:%d has no type", n.Pos.Line, n.Pos.Col)
 	}
 	return nil
+}
+
+// LabelAttr is the Attrs key under which a labelled edge stores its branch.
+// It is not a valid identifier, so `a -> b { label: x }` cannot forge it.
+const LabelAttr = "[label]"
+
+// EdgeLabel returns the branch of a labelled edge (`gate[branch] -> x`), or
+// nil for an ordinary edge.
+func EdgeLabel(e *Node) *Node {
+	if e == nil || e.Type != NodeEdge || e.Attrs == nil {
+		return nil
+	}
+	return e.Attrs[LabelAttr]
+}
+
+// LabelString is the canonical text of a branch, shared by the IR, the
+// conformance corpus and the platform dialect (flow_edges.source_handle
+// "laya:" + LabelString):
+//
+//	proceed / "texto" -> the text      true / false -> "true" / "false"
+//	*                 -> "*"           <10 / >=50   -> "range:<10" / "range:>=50"
+//	10..50            -> "range:10..50"
+//
+// Numbers keep their source literal.
+func LabelString(b *Node) string {
+	if b == nil {
+		return ""
+	}
+	switch b.Type {
+	case NodeRange:
+		if b.Value == ".." && len(b.Children) == 2 {
+			return "range:" + b.Children[0].Value + ".." + b.Children[1].Value
+		}
+		if len(b.Children) == 1 {
+			return "range:" + b.Value + b.Children[0].Value
+		}
+		return "range:"
+	case NodeBoolLiteral:
+		if b.BoolVal {
+			return "true"
+		}
+		return "false"
+	default:
+		return b.Value
+	}
 }

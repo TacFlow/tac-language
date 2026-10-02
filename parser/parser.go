@@ -628,21 +628,38 @@ func (p *Parser) parseFlowBody() (*ast.Node, error) {
 		case tok.Type == lexer.Ident && tok.Value == "recall":
 			flow.Children = append(flow.Children, p.parseRecallStmt())
 
+		case tok.Type == lexer.Ident && tok.Value == "schedule" && p.pos+1 < len(p.tokens) && p.tokens[p.pos+1].Type == lexer.String:
+			// Only `schedule "<cron>"`: a v0.4 node named schedule
+			// (`schedule -> b`) is still an edge.
+			flow.Children = append(flow.Children, p.parseSchedule())
+
 		case tok.Type == lexer.Newline || tok.Type == lexer.Comment:
 			p.advance()
 			continue
 
 		case tok.Type == lexer.Ident:
-			// Could be an edge or an inline statement
+			// An edge (`a -> b`, `gate[branch] -> b`) or a form the parser does
+			// not recognise. v0.4 skipped the latter in silence; v0.5 records it
+			// (TAC-PARSE-001) so a newer construct never vanishes unnoticed.
+			start := p.pos
 			p.advance()
 			p.skipNewlines()
-			if p.peek().Type == lexer.Arrow {
+			switch p.peek().Type {
+			case lexer.Arrow:
 				flow.Edges = append(flow.Edges, p.parseEdgeChain(tok)...)
+			case lexer.LBrack:
+				edges, bad := p.parseLabelledEdge(tok)
+				flow.Edges = append(flow.Edges, edges...)
+				if bad != nil {
+					flow.Children = append(flow.Children, bad)
+				}
+			default:
+				p.pos = start
+				flow.Children = append(flow.Children, p.unrecognized())
 			}
 
 		default:
-			// Skip unrecognized token
-			p.advance()
+			flow.Children = append(flow.Children, p.unrecognized())
 		}
 
 		p.skipNewlines()
@@ -660,6 +677,12 @@ func (p *Parser) parseFlowBody() (*ast.Node, error) {
 // hop of a chain becomes its own Edge (bug b, v0.4.0: only the first hop was
 // kept). A chain continues only after an identifier target.
 func (p *Parser) parseEdgeChain(srcTok lexer.Token) []*ast.Node {
+	return p.parseEdgeChainLabelled(srcTok, nil)
+}
+
+// parseEdgeChainLabelled is parseEdgeChain whose FIRST hop carries a gate
+// branch (`gate[branch] -> x`); later hops of the chain are plain edges.
+func (p *Parser) parseEdgeChainLabelled(srcTok lexer.Token, label *ast.Node) []*ast.Node {
 	var edges []*ast.Node
 	for {
 		e := ast.NewNode(ast.NodeEdge, srcTok.Line, srcTok.Col)
@@ -682,6 +705,13 @@ func (p *Parser) parseEdgeChain(srcTok lexer.Token) []*ast.Node {
 
 		if p.peek().Type == lexer.LBrace {
 			e.Attrs = p.parseNamedArgs()
+		}
+		if label != nil {
+			if e.Attrs == nil {
+				e.Attrs = make(map[string]*ast.Node)
+			}
+			e.Attrs[ast.LabelAttr] = label
+			label = nil
 		}
 		edges = append(edges, e)
 
@@ -706,6 +736,9 @@ func (p *Parser) Parse() (*ast.Node, error) {
 		switch {
 		case tok.Type == lexer.Newline || tok.Type == lexer.Comment:
 			p.advance()
+
+		case p.isDeclStart():
+			program.Nodes = append(program.Nodes, p.parseDecl())
 
 		case tok.Type == lexer.Ident && tok.Value == "flow":
 			p.advance()
@@ -751,7 +784,8 @@ func (p *Parser) Parse() (*ast.Node, error) {
 					case p.peek().Type == lexer.Ident && p.peek().Value == "recall":
 						ctx.Children = append(ctx.Children, p.parseRecallStmt())
 					default:
-						p.advance()
+						// v0.5: recorded (TAC-PARSE-001) instead of skipped.
+						ctx.Children = append(ctx.Children, p.unrecognized())
 					}
 					p.skipNewlines()
 				}
@@ -804,8 +838,9 @@ func (p *Parser) Parse() (*ast.Node, error) {
 			program.Nodes = append(program.Nodes, as)
 
 		default:
-			// Skip unrecognized top-level tokens
-			p.advance()
+			// v0.4 skipped unrecognised top-level tokens in silence; v0.5
+			// records the form (TAC-PARSE-001).
+			program.Nodes = append(program.Nodes, p.unrecognized())
 		}
 
 		p.skipNewlines()
@@ -833,5 +868,16 @@ func ParseSource(source string) (*ast.Node, error) {
 		return nil, fmt.Errorf("tokenization errors: %v", errs)
 	}
 	p := New(tokens)
-	return p.Parse()
+	program, err := p.Parse()
+	if err != nil || program == nil {
+		return program, err
+	}
+	// v0.5: numbers glued to identifier text (`3x`) are kept as v0.4 read
+	// them and recorded for the analyzer (TAC-PARSE-001).
+	for _, g := range l.Glued() {
+		n := ast.NewNode(ast.NodeGluedNumber, g.Line, g.Col)
+		n.Value = g.Number + g.Rest
+		program.Nodes = append(program.Nodes, n)
+	}
+	return program, nil
 }
