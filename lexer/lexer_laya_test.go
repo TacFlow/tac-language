@@ -108,3 +108,26 @@ func TestLexer_ExponentAndGluedNumbers(t *testing.T) {
 		}
 	}
 }
+
+// M-9: Glued.Col is the column where the glued number starts (its sign
+// included), so the TAC-PARSE-001 warning points at the number, not at the
+// text after it.
+func TestLexer_GluedColumnIsTheNumbers(t *testing.T) {
+	for src, want := range map[string][2]int{
+		"3x":                 {1, 1},
+		"x: 3x":              {1, 4},
+		"x: -3x":             {1, 4},
+		"x: 12.5kg":          {1, 4},
+		"x: 1e3x":            {1, 4},
+		"a\n  b: 1_000, c: 2": {2, 6},
+	} {
+		l := New(src)
+		if _, err := l.Scan(); err != nil {
+			t.Fatalf("%q: %v", src, err)
+		}
+		g := l.Glued()
+		if len(g) != 1 || g[0].Line != want[0] || g[0].Col != want[1] {
+			t.Errorf("%q: glued %+v, want line %d col %d", src, g, want[0], want[1])
+		}
+	}
+}

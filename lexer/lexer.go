@@ -365,12 +365,15 @@ func (l *Lexer) scanNumber() {
 		for end < len(l.source) && (isIdentStart(l.source[end]) || isDigit(l.source[end]) || l.source[end] == '.') {
 			end++
 		}
-		l.glued = append(l.glued, Glued{Line: l.line, Col: l.col, Number: lit, Rest: string(l.source[l.pos:end])})
+		// Col: where the number starts (a number never spans lines and is
+		// ASCII), not the column after it that tokens carry.
+		l.glued = append(l.glued, Glued{Line: l.line, Col: l.col - len(lit), Number: lit, Rest: string(l.source[l.pos:end])})
 	}
 }
 
 // Glued is a number immediately followed by identifier text (`3x`): v0.4
-// semantics are kept (two tokens), and the parser reports it.
+// semantics are kept (two tokens), and the parser reports it. Line and Col
+// are where the number starts.
 type Glued struct {
 	Line, Col int
 	Number    string
