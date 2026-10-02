@@ -293,6 +293,16 @@ func (a *Analyzer) validateGate(flowName, src string, call *ast.Node, outs []bra
 			"flow %q: edge %s -> %s leaves gate %q without a label; every edge out of a gate is a branch",
 			flowName, src, ast.EdgeTarget(e), src)
 	}
+	// `gate[x] -> a { if: …, else: b }`: when the condition fails the run
+	// goes from the gate to b with no branch label — an unlabelled edge out
+	// of a gate, like the plain edges above.
+	for _, o := range outs {
+		if _, fb, _ := ast.EdgeCondition(o.edge); fb != "" {
+			a.errorf(DiagLaya+"-016", o.edge.Pos.Line, o.edge.Pos.Col,
+				"flow %q: edge %s[%s] -> %s has else: %s, which leaves gate %q without a label; give that path its own branch",
+				flowName, src, o.label, ast.EdgeTarget(o.edge), fb, src)
+		}
+	}
 	seen := map[string]bool{}
 	labels := map[string]bool{}
 	for _, o := range outs {
