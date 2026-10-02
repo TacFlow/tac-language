@@ -2,6 +2,28 @@
 
 All notable changes to the TAC Language will be documented in this file.
 
+## [Unreleased] — v0.5.0 (LAYA)
+
+### ✨ LAYA in TAC
+
+- `requires "0.5"`; declarations `task`, `model`, `episode`, `dataset` (DESIGN of the LAYA mission, §5).
+- Gates: `gate[branch] -> node` after a `laya.decide` node — labels, `"strings"`, `true`/`false`, `*`, ranges `[<10]`, `[10..50]`, `[>=50]`, `[<-5]`; pseudo-labels `low_confidence`, `error`.
+- `schedule "<cron>" tz "<IANA>"` (repeatable) on flows.
+- 13 `laya.*` skills in the standard library (`skills.json` lists them).
+- Diagnostics TAC-LAYA-001…017, TAC-PARSE-001 (a form the parser skipped — no longer silent), TAC-VER-001, TAC-EVT-002, TAC-SCHED-001/002, TAC-TYPE-001.
+- IR 1.2: edge `label`/`range`, flow `requires` (stamped automatically) and `schedules`. `tac compile --json` prints the whole program; `tac episode` prints a declared episode; `--tasks <file>` gives the analyzer a task registry.
+- Lexer: `*`, `..`, negative number literals, scientific notation (`1e3`, `2.5E-4`).
+
+### 🔧 Fixes (the only differences on v0.4 sources — `compat_test.go`)
+
+1. `language` block: `language_version` 0.5, `ir_version` 1.2 (the release number moves with the tag).
+2. Skill arguments keep their values: `web_search(query: q)` is `{"query": {"ref": "q"}}`, not `{"arg0": "query"}`.
+3. Chained edges `a -> b -> c` keep every hop.
+4. An input type that is neither a trust type nor a value type warns (TAC-TYPE-001), as SPEC §5.2 rule 3 requires.
+5. `else:` targets are reachable (no TAC-GRAPH-003).
+
+Also: an array literal the parser cannot read no longer hangs it; `tac fmt` keeps the bodies of block nodes (`if`/`else`/`for each`), quotes object keys that are not identifiers, and is idempotent on every example; scientific notation (`1e3`, `2.5E-4`) is one number, and any other text glued to a number (`3x`, `2.5kg`) is still read as in v0.4 but warns TAC-PARSE-001 naming it; forms the parser skips (also inside declarations and `context` blocks) are reported as TAC-PARSE-001.
+
 ## [v0.4.0] — 2026-09-02
 
 ### ✨ Value Types on Declared Inputs
