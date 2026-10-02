@@ -41,3 +41,42 @@ func TestBugD_ArrayLiteralWithUnparseableElementTerminates(t *testing.T) {
 		parseWithin(t, src, 2*time.Second)
 	}
 }
+func edgePairs(flow *ast.Node) []string {
+	var out []string
+	for _, e := range flow.Edges {
+		out = append(out, ast.EdgeSource(e)+">"+ast.EdgeTarget(e))
+	}
+	return out
+}
+
+// Bug b: `a -> b -> c` kept only a -> b; every later hop was dropped.
+func TestBugB_ChainedEdgesKeepEveryHop(t *testing.T) {
+	src := `flow "f" {
+  node "a" -> skill foo()
+  node "b" -> skill foo()
+  node "c" -> skill foo()
+  node "d" -> skill foo()
+  a -> b -> c -> d
+  a -> d
+}`
+	prog, err := ParseSource(src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := edgePairs(ast.CollectFlows(prog)[0])
+	want := []string{"a>b", "b>c", "c>d", "a>d"}
+	if len(got) != len(want) {
+		t.Fatalf("edges = %v, want %v", got, want)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Fatalf("edges = %v, want %v", got, want)
+		}
+	}
+	// The tail edge is positioned at its own source token: the `b` that is
+	// the target of the first hop.
+	edges := ast.CollectFlows(prog)[0].Edges
+	if got, want := edges[1].Pos, edges[0].Children[1].Pos; got != want {
+		t.Errorf("b -> c at %+v, want %+v", got, want)
+	}
+}

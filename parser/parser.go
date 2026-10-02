@@ -634,28 +634,10 @@ func (p *Parser) parseFlowBody() (*ast.Node, error) {
 
 		case tok.Type == lexer.Ident:
 			// Could be an edge or an inline statement
-			name := tok.Value
 			p.advance()
 			p.skipNewlines()
 			if p.peek().Type == lexer.Arrow {
-				e := ast.NewNode(ast.NodeEdge, tok.Line, tok.Col)
-				src := ast.NewNode(ast.NodeIdentifier, tok.Line, tok.Col)
-				src.Value = name
-				e.Children = append(e.Children, src)
-
-				p.advance() // ->
-				p.skipNewlines()
-
-				if p.peek().Type == lexer.LBrack {
-					e.Children = append(e.Children, p.parseArrayLiteral())
-				} else if p.peek().Type == lexer.Ident {
-					e.Children = append(e.Children, p.parseIdent())
-				}
-
-				if p.peek().Type == lexer.LBrace {
-					e.Attrs = p.parseNamedArgs()
-				}
-				flow.Edges = append(flow.Edges, e)
+				flow.Edges = append(flow.Edges, p.parseEdgeChain(tok)...)
 			}
 
 		default:
@@ -671,6 +653,43 @@ func (p *Parser) parseFlowBody() (*ast.Node, error) {
 	}
 
 	return flow, nil
+}
+
+// parseEdgeChain parses `src -> tgt [ { attrs } ] [ -> tgt2 ... ]` once the
+// source identifier srcTok has been consumed and an Arrow is current. Every
+// hop of a chain becomes its own Edge (bug b, v0.4.0: only the first hop was
+// kept). A chain continues only after an identifier target.
+func (p *Parser) parseEdgeChain(srcTok lexer.Token) []*ast.Node {
+	var edges []*ast.Node
+	for {
+		e := ast.NewNode(ast.NodeEdge, srcTok.Line, srcTok.Col)
+		src := ast.NewNode(ast.NodeIdentifier, srcTok.Line, srcTok.Col)
+		src.Value = srcTok.Value
+		e.Children = append(e.Children, src)
+
+		p.advance() // ->
+		p.skipNewlines()
+
+		var tgtTok lexer.Token
+		isIdent := false
+		if p.peek().Type == lexer.LBrack {
+			e.Children = append(e.Children, p.parseArrayLiteral())
+		} else if p.peek().Type == lexer.Ident {
+			tgtTok = p.peek()
+			isIdent = true
+			e.Children = append(e.Children, p.parseIdent())
+		}
+
+		if p.peek().Type == lexer.LBrace {
+			e.Attrs = p.parseNamedArgs()
+		}
+		edges = append(edges, e)
+
+		if !isIdent || p.peek().Type != lexer.Arrow {
+			return edges
+		}
+		srcTok = tgtTok
+	}
 }
 
 // --- Top-Level Parsing ---
