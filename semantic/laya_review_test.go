@@ -75,3 +75,26 @@ func TestLayaGate_RangeMessages(t *testing.T) {
 		t.Errorf("valid ranges: %v", d)
 	}
 }
+
+// M-4: `requires` takes a dotted numeric version and appears at most once.
+// No DESIGN §5.9 code fits (TAC-VER-001 is "newer than the compiler",
+// TAC-VER-002 is LAYA syntax on a path without it), so these are errors
+// without a code.
+func TestRequires_InvalidOrRepeated(t *testing.T) {
+	for _, v := range []string{"banana", "", "0.5.", ".5", "v0.5", "0.5-beta", "0..5"} {
+		if d := diagsOf(t, `requires "`+v+`"`); !hasError(d, "", "not a version") {
+			t.Errorf("requires %q: want an invalid-version error, got %v", v, d)
+		}
+	}
+	for _, v := range []string{"0.5", "0.4", "1", "0.5.0"} {
+		for _, d := range diagsOf(t, `requires "`+v+`"`) {
+			if d.Severity == SeverityError {
+				t.Errorf("requires %q: unexpected %v", v, d)
+			}
+		}
+	}
+	d := diagsOf(t, "requires \"0.5\"\nrequires \"0.4\"\n")
+	if !hasError(d, "", "more than once") {
+		t.Errorf("two requires: want an error, got %v", d)
+	}
+}

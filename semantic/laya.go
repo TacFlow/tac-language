@@ -3,6 +3,7 @@ package semantic
 import (
 	"fmt"
 	"math"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -37,6 +38,9 @@ func (a *Analyzer) SetTasks(tasks []laya.Task) {
 	}
 	a.registry_ = true
 }
+
+// versionRE is the form of a `requires` version: dotted numbers.
+var versionRE = regexp.MustCompile(`^[0-9]+(\.[0-9]+)*$`)
 
 // versionLess compares dotted numeric versions ("0.5" < "0.10").
 func versionLess(a, b string) bool {
@@ -94,6 +98,7 @@ func (a *Analyzer) analyzeDecls(program *ast.Node) {
 		}
 	}
 	seenEpisode := map[string]bool{}
+	requiresSeen := false
 	for _, n := range program.Nodes {
 		switch n.Type {
 		case ast.NodeTaskDecl, ast.NodeModelDecl, ast.NodeEpisodeDecl, ast.NodeDatasetDecl:
@@ -114,7 +119,14 @@ func (a *Analyzer) analyzeDecls(program *ast.Node) {
 			a.warningf(DiagParse+"-001", n.Pos.Line, n.Pos.Col,
 				"unrecognized form starting at %s; it was ignored", n.Value)
 		case ast.NodeRequires:
-			if versionLess(SupportedLanguage, n.Value) {
+			if requiresSeen {
+				a.errorf("", n.Pos.Line, n.Pos.Col, "requires is declared more than once; keep one")
+			}
+			requiresSeen = true
+			if !versionRE.MatchString(n.Value) {
+				a.errorf("", n.Pos.Line, n.Pos.Col,
+					"requires %q is not a version: use dotted numbers, e.g. requires %q", n.Value, SupportedLanguage)
+			} else if versionLess(SupportedLanguage, n.Value) {
 				a.warningf(DiagVer+"-001", n.Pos.Line, n.Pos.Col,
 					"requires %q is newer than this compiler (language %s); constructs it does not know are ignored",
 					n.Value, SupportedLanguage)
