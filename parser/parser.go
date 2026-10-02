@@ -166,9 +166,13 @@ func (p *Parser) parseArrayLiteral() *ast.Node {
 	p.skipNewlines()
 	for p.peek().Type != lexer.RBrack && p.peek().Type != lexer.EOF {
 		val := p.parseValue()
-		if val != nil {
-			n.ArrVal = append(n.ArrVal, val)
+		if val == nil {
+			// Bug d (v0.4.0): parseValue consumed nothing for this token, so
+			// looping back would repeat the same state forever. Stop here and
+			// leave the token to the enclosing construct.
+			break
 		}
+		n.ArrVal = append(n.ArrVal, val)
 		p.skipNewlines()
 		if p.peek().Type == lexer.Comma {
 			p.advance()
