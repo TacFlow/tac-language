@@ -12,7 +12,7 @@
 2. [Core Philosophy](#2-core-philosophy)
 3. [Hybrid Memory Architecture (BM25 + Vector + Graph)](#3-hybrid-memory-architecture-bm25--vector--graph)
 4. [Language Syntax](#4-language-syntax)
-5. [Types System — Trust Types](#5-types-system--trust-types)
+5. [Types System — Trust Types and Value Types](#5-types-system--trust-types-and-value-types)
 6. [Flows — The Execution Model](#6-flows--the-execution-model)
 7. [Skills — The Standard Library](#7-skills--the-standard-library)
 8. [Swarm Concurrency](#8-swarm-concurrency)
@@ -21,6 +21,7 @@
 11. [Training Data Format (LoRA / QLoRA)](#11-training-data-format-lora--qlora)
 12. [Parser Implementation Guide](#12-parser-implementation-guide)
 13. [Appendix: Complete Examples](#13-appendix-complete-examples)
+14. [LAYA — Decision Tasks (v0.5)](#14-laya--decision-tasks-v05)
 
 ---
 
@@ -977,6 +978,9 @@ trigger_def = "on" string [ "{" trigger_attrs "}" ] "->" string ;
 context_block = "context" string "{" { statement } "}" ;
 ```
 
+v0.5 adds `requires`, `task`, `model`, `episode`, `dataset`, `schedule` and
+labelled edges (`gate[branch] -> node`); their productions are in §14.
+
 ---
 
 ## 13. Appendix: Complete Examples
@@ -1143,6 +1147,210 @@ context "user_session" {
   }
 }
 ```
+
+---
+
+## 14. LAYA — Decision Tasks (v0.5)
+
+TAC v0.5 adds **LAYA**, TacFlow's decision layer: a flow asks a trained model a
+question about a payload (`laya.decide`), and the answer chooses which branch of
+the DAG runs. This section is normative for the v0.5 surface. Everything here is
+additive: a v0.4 source compiles unchanged except for the five differences
+listed in `CHANGELOG.md` (`[v0.5.0]`, "Fixes").
+
+### 14.1 Language level — `requires`
+
+```tac
+requires "0.5"
+```
+
+An optional first statement. The value is a dotted version (`"0.5"`, `"0.5.1"`);
+anything else is an error, and a second `requires` is an error. A level newer
+than the compiler's (`SupportedLanguage`, `0.5`) is a warning, `TAC-VER-001`,
+because a v0.4 compiler would silently drop v0.5 constructs. The compiler stamps
+`"requires": "0.5"` on every flow that uses a v0.5 construct, whether or not the
+source declares it.
+
+### 14.2 Declarations
+
+Four new top-level declarations. They carry data, not behaviour, and compile to
+`tasks`, `models`, `episodes` and `datasets` in the program output
+(`tac compile --json`).
+
+```ebnf
+task_def     = "task" string "{" { question_def | "profile" object } "}" ;
+model_def    = "model" string "{" { "tasks" "[" string { "," string } "]" | "base" string | "port" number } "}" ;
+episode_def  = "episode" string "{" { "group" string | "goal" string | "context" object | "rule" string
+                                    | "tool" string | "task" string | ident value
+                                    | question_def | "target" ident "=" value | "meta" object } "}" ;
+dataset_def  = "dataset" string "{" "task" string { "include" string { "," string } | "from" string
+                                    | "split" ident "=" number } "}" ;
+question_def = "question" ident ":" qtype string [ object ] [ "{" { ident ":" string } "}" ] ;
+qtype        = "choice" | "multi_choice" | "binary" | "number" | "scale"
+             | "ranking" | "extraction" | "text" | ident ;
+```
+
+A `number` question needs `{ range: [min, max] }` with `min < max` (`bins`, `unit`
+are optional). `target <question> = <value>` is the answer the episode records:
+a label (`proceed`), a list (`["a","b"]`), `true`/`false`, a number or a string.
+Number literals keep their written form (`1.50`, `1e3`) and nothing above 2^53
+loses precision. An `episode` is canonical **laya.episode/1**; `tac episode`
+prints it bare:
+
+```tac
+episode "evt-c1-estoque-0007-a" {
+  group "conv-estoque-reposicao-2026-10"
+  goal "decidir se reabastece o SKU antes do próximo ciclo de compra"
+  context { sku: "REF-2L-COLA", estoque_atual: 2, ponto_reposicao: 10, pedido_em_aberto: false }
+  tool "estoque.consultar_sku"
+  cache_available false
+  question acao: choice "Qual ação o agente deve tomar neste passo?" {
+    proceed: "executar o passo agora (dado ausente/obsoleto)"
+    reuse:   "usar resultado em cache válido"
+    skip:    "passo provadamente desnecessário"
+    ask:     "ambíguo, faltam dados ou risco/custo sem justificação"
+  }
+  target acao = proceed
+}
+```
+
+```
+$ tac episode examples/laya_episode.tac            # the episode as JSON
+$ tac episode examples/laya_dataset.tac --id ds-estoque-002
+```
+
+A `dataset` lists episode ids (`include`) and optional `split <name> = <fraction>`
+entries; splits must sum to 1 (`TAC-LAYA-012`). Complete files:
+`examples/laya_episode.tac`, `examples/laya_dataset.tac`.
+
+### 14.3 Gates — labelled edges
+
+`laya.decide` answers a task's question. When at least one **labelled edge**
+leaves the node, it is a *gate*: each label is one branch.
+
+```tac
+flow "estoque_gate" {
+  node "gate"      -> skill laya.decide(task: "acao", input: payload, min_confidence: 0.8)
+  node "fetch"     -> skill web_search(query: payload)
+  node "use_cache" -> skill memory_search(query: payload)
+  node "ask_human" -> skill agent_task(agent: "humano", payload: payload)
+  gate[proceed]        -> fetch
+  gate[reuse]          -> use_cache
+  gate[low_confidence] -> ask_human
+  gate[error]          -> ask_human
+  gate[*]              -> ask_human
+}
+```
+
+```ebnf
+label_edge = ident "[" branch "]" "->" ident ;
+branch     = ident | string | "true" | "false" | "*" | range ;
+range      = ( "<" | "<=" | ">" | ">=" ) number | number ".." number ;
+```
+
+- **Labels** are the task's option names, `true`/`false` for `binary`, level
+  names for `scale`. `*` is the fallback.
+- **Pseudo-labels** `low_confidence` (the model abstained or was below
+  `min_confidence`) and `error` (the decision could not be obtained) exist on
+  every gate. A task may not use them or `*` as its own labels (`TAC-LAYA-017`).
+- **Ranges** are for `number` questions: `[<3]`, `[>=10]`, `[3..10]` (the
+  half-open interval [3, 10)), negative bounds too (`[<-5]`). Overlapping ranges
+  are `TAC-LAYA-011`; an empty or inverted range (`[5..5]`, `[50..10]`) is
+  `TAC-LAYA-002`.
+- Every spine edge leaving a gate carries a label; an unlabelled one is
+  `TAC-LAYA-016`, and so is `else:` on a labelled edge. The same label twice is
+  `TAC-LAYA-004`; a labelled edge from a node that is not `laya.decide` is
+  `TAC-LAYA-009`; a gate over an `extraction` or `text` question is `TAC-LAYA-005`.
+- Label checking needs the task: a `task` declared in the file or a registry
+  given with `--tasks <file.json>` (`[{name, questions}]`). Without one the gate
+  warns `TAC-LAYA-001` and labels are not checked; a label the task does not
+  have is `TAC-LAYA-002`; a gate that leaves labels, `[low_confidence]` or
+  `[error]` uncovered and has no `[*]` warns `TAC-LAYA-003`.
+- The output of `laya.decide` is `Hallucinable`: routing on it is allowed,
+  passing it where a `Fact` is required is `TAC-TRUST-001`.
+
+This compiler has no lateral edges (`~>`), so `TAC-LAYA-015` (a gate in a
+lateral position) is raised only by the TacFlow platform dialect.
+
+### 14.4 Schedules and events
+
+```tac
+flow "estoque_treino" {
+  schedule "0 3 * * *" tz "Europe/Lisbon"      // repeatable
+  ...
+}
+
+flow "estoque_promover" {
+  on "laya.train.completed" -> ev              // starts the flow on a matching event
+  ...
+}
+```
+
+`schedule "<cron>" [tz "<IANA zone>"]` is validated: an unsupported cron is
+`TAC-SCHED-001`, an unknown zone `TAC-SCHED-002`. `on "<pattern>" -> <node>` is
+the existing trigger (§6.4); in LAYA flows the pattern is NATS-style tokens
+separated by `.`, with `*` for one token and `>` for the rest. The event's
+payload is the implicit identifier `payload` (`payload.run`, `payload.path`...),
+available in every flow without an `input` declaration; a reference is compiled
+as `{"ref": "payload.run"}`. A flow whose only entry points are `on` triggers
+does nothing on a manual or scheduled run, so having a `schedule` with no root
+outside `on` warns `TAC-EVT-002`.
+
+### 14.5 The `laya.*` skills
+
+Thirteen skills are in the standard library (and listed in `skills.json`):
+`laya.decide`, `laya.classify`, `laya.normalize`, `laya.episode.record`,
+`laya.dataset.export`, `laya.train` (asynchronous: it publishes
+`laya.train.completed`), `laya.eval`, `laya.model.create`, `laya.model.status`,
+`laya.model.promote`, `laya.model.rollback`, `laya.tasks.list`,
+`laya.tasks.describe`. Their argument and result contracts are in `skills.json`.
+`examples/laya_normalize.tac` and `examples/laya_training_loop.tac` use them.
+
+### 14.6 Diagnostics
+
+| Code | Severity | Meaning |
+|------|----------|---------|
+| `TAC-PARSE-001` | warning | a form the parser skipped, or a number glued to text (`3x`); `tac fmt` refuses such a source |
+| `TAC-VER-001` | warning | `requires` newer than the compiler |
+| `TAC-TYPE-001` | warning | input type that is neither a trust type nor a value type (§5.2) |
+| `TAC-LAYA-001` | warning | unknown task, or no task registry |
+| `TAC-LAYA-002` | error | label not in the task, or an empty/inverted/non-finite range |
+| `TAC-LAYA-003` | warning | gate coverage incomplete and no `[*]` |
+| `TAC-LAYA-004` | error | duplicate label |
+| `TAC-LAYA-005` | error | gate over `extraction`/`text` |
+| `TAC-LAYA-006` / `007` | error | `target` for an undeclared question / invalid value |
+| `TAC-LAYA-008` | warning | unknown question type |
+| `TAC-LAYA-009` | error | labelled edge from a node that is not `laya.decide` |
+| `TAC-LAYA-010` | warning | `model` lists an unknown task |
+| `TAC-LAYA-011` | error | overlapping numeric ranges |
+| `TAC-LAYA-012` | error | splits do not sum to 1 |
+| `TAC-LAYA-013` | warning | duplicate episode id (the last wins) |
+| `TAC-LAYA-014` | error | more than 32 questions, or per-type limits exceeded |
+| `TAC-LAYA-016` | error | unlabelled spine edge from a gate (also `else:` on a labelled edge) |
+| `TAC-LAYA-017` | error | task uses a reserved pseudo-label |
+| `TAC-EVT-002` | warning | `schedule` on a flow whose roots are all `on` targets |
+| `TAC-SCHED-001` / `002` | error | invalid cron / unknown IANA zone |
+
+Also errors without a code: a number literal that overflows a float64, a
+malformed or repeated `requires`. An argument given more than once warns (the
+last value wins, as in v0.4). `TAC-LAYA-015`, `TAC-EVT-001` and `TAC-VER-002`
+belong to the platform dialect and are not raised here.
+
+### 14.7 Output
+
+Flow JSON is IR **1.2**: edges gain `label` (a string) or `range`
+(`{"min","max"}` for `[a..b]`, `{"op","value"}` for `<`, `<=`, `>`, `>=`), and
+flows gain `requires` and `schedules`. `tac compile --json` prints the whole
+program (`flows`, `tasks`, `models`, `episodes`, `datasets`). The `language`
+block reads `language_version: "0.5"`, `compiler_version: "0.5.0"`,
+`ir_version: "1.2"`. Skill arguments keep their values: `web_search(query: q)`
+is `{"query": {"ref": "q"}}`.
+
+### 14.8 Conformance
+
+`conformance/laya/` holds the corpus shared with the TacFlow platform dialect;
+each case compiles in both compilers and a reduced common shape must match
+(see its README).
 
 ---
 

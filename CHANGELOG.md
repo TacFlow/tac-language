@@ -2,7 +2,7 @@
 
 All notable changes to the TAC Language will be documented in this file.
 
-## [Unreleased] — v0.5.0 (LAYA)
+## [v0.5.0] — 2026-10-06
 
 ### ✨ LAYA in TAC
 
@@ -18,7 +18,7 @@ All notable changes to the TAC Language will be documented in this file.
 
 ### 🔧 Fixes (the only differences on v0.4 sources — `compat_test.go`)
 
-1. `language` block: `language_version` 0.5, `ir_version` 1.2 (the release number moves with the tag).
+1. `language` block: `language_version` 0.5, `ir_version` 1.2 (`compiler_version` is `0.5.0`).
 2. Skill arguments keep their values: `web_search(query: q)` is `{"query": {"ref": "q"}}`, not `{"arg0": "query"}`. Numeric values are written as their literal (`json.Number`): `1.50` stays `1.50`, `1e3` stays `1e3`, nothing above 2^53 loses precision; leading zeros, which JSON forbids, are dropped (`007` is `7`, as v0.4 read it).
 3. Chained edges `a -> b -> c` keep every hop.
 4. An input type that is neither a trust type nor a value type warns (TAC-TYPE-001), as SPEC §5.2 rule 3 requires.
@@ -38,6 +38,14 @@ For library users (Go API):
 - The AST has `NodeUnrecognized` (a skipped form, Value = its first token) and `NodeGluedNumber` (`3x`, at the column where the number starts) nodes, in `Program.Nodes`, `Flow.Children`, `ContextBlock.Children` and declaration `Children`.
 - A chained edge `a -> b -> c` is N edges in `Flow.Edges` (was one).
 - Labelled edges store their branch in `Edge.Attrs[ast.LabelAttr]`.
+
+### 📄 Also
+
+- `SPEC.md` gains §14 "LAYA — Decision Tasks (v0.5)" (declarations, gates, schedules and events, the `laya.*` skills, the diagnostics table, IR 1.2, conformance); the table of contents and §12.3 point to it.
+- `README.md`: LAYA section, the six `examples/laya_*.tac`, and the new CLI commands.
+- Six dialect-neutral examples: `examples/laya_gate.tac`, `laya_event_trigger.tac`, `laya_episode.tac`, `laya_dataset.tac`, `laya_normalize.tac`, `laya_training_loop.tac`.
+- `conformance/laya/`: 33 cases shared with the TacFlow platform dialect (`client-app/api/pkg/tac`), hash-pinned there.
+- `version` → `0.5.0`, `langVersion` → `0.5`, `irVersion` → `1.2` (the emitted IR changed: edges gain `label`/`range`, flows gain `requires`/`schedules`). The version constants live in `compiler/version.go`.
 
 ### 🧩 New Go API
 

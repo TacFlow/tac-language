@@ -68,7 +68,14 @@ tac-language/
 │   ├── typed_inputs.tac        # Value types + trust types on declared inputs
 │   ├── value_types.tac         # All six value types in one flow
 │   ├── parameterized_subflow.tac # Typed inputs bound via flow.run(flow, params)
-│   └── input_conformance.tac   # Unknown type names degrade, never error
+│   ├── input_conformance.tac   # Unknown type names degrade, never error
+│   ├── laya_gate.tac           # LAYA gate: laya.decide + labelled edges (v0.5)
+│   ├── laya_event_trigger.tac  # Gate started by an event: on "<pattern>" (v0.5)
+│   ├── laya_episode.tac        # A declared episode; `tac episode` prints it (v0.5)
+│   ├── laya_dataset.tac        # task + episodes + dataset with splits (v0.5)
+│   ├── laya_normalize.tac      # laya.normalize -> laya.episode.record (v0.5)
+│   └── laya_training_loop.tac  # schedule + on: train, eval, promote (v0.5)
+├── conformance/laya/           # LAYA corpus shared with the TacFlow platform dialect
 ├── testdata/                   # Golden file tests
 ├── docs/
 │   ├── tac-lang-pipeline.html   # 3-stage pipeline diagram (Archify)
@@ -110,6 +117,12 @@ go build -o tac ./cmd/tac
 
 # Validate (semantic analysis)
 ./tac validate examples/web_qa.tac
+
+# v0.5: whole program (flows, tasks, models, episodes, datasets) as JSON
+./tac compile examples/laya_dataset.tac --json
+
+# v0.5: print a declared LAYA episode (--id picks one of several)
+./tac episode examples/laya_episode.tac
 ```
 
 ### 4. Inspect the AST
@@ -140,6 +153,7 @@ for n in ast.get('nodes', []):
 | **Two Type Systems, One Slot** | Trust types model *provenance*; value types model *shape*. An `input` carries either |
 | **Execution is a DAG** | No call stack — every program is a directed acyclic graph |
 | **Concurrency is Swarm Delegation** | No threads — delegate to peer agents in the swarm |
+| **Decisions are Branches** | `laya.decide` answers a task's question; labelled edges `gate[label] -> node` pick the branch (v0.5) |
 | **Context is Scope** | No nested `{}` — context windows model the attention span |
 | **Hybrid Memory** | BM25 + Vector + Graph — queried simultaneously |
 
@@ -233,6 +247,40 @@ Neither subsumes the other, and each misses what the other catches:
 [`examples/typed_inputs.tac`](examples/typed_inputs.tac) shows both in one
 flow. Delete its `verify()` node and the analyzer raises `TAC-TRUST-001` while
 every value type still checks out.
+
+### LAYA: Decision Tasks (v0.5.0)
+
+TAC v0.5 adds **LAYA**, TacFlow's decision layer. A flow asks a task's question
+about a payload with `laya.decide`, and the answer selects which branch runs.
+The full surface is in [`SPEC.md`](SPEC.md) §14; in short:
+
+```tac
+requires "0.5"                     // optional language level; stamped automatically
+
+flow "estoque_gate" {
+  node "gate"      -> skill laya.decide(task: "acao", input: payload, min_confidence: 0.8)
+  node "fetch"     -> skill web_search(query: payload)
+  node "ask_human" -> skill agent_task(agent: "humano", payload: payload)
+  gate[proceed]        -> fetch      // a label of the task
+  gate[low_confidence] -> ask_human  // pseudo-labels: low_confidence, error
+  gate[*]              -> ask_human  // fallback
+}
+```
+
+| Feature | Syntax |
+|---------|--------|
+| Gate branches | `gate[label]`, `gate["text"]`, `gate[true]`, `gate[*]`, ranges `gate[<10]`, `gate[10..50]`, `gate[>=50]`, `gate[<-5]` |
+| Schedules | `schedule "0 3 * * *" tz "Europe/Lisbon"` (repeatable) |
+| Events | `on "estoque.baixo" -> gate`; the event body is the implicit `payload` |
+| Declarations | `task`, `model`, `episode` (laya.episode/1), `dataset` |
+| Standard library | 13 `laya.*` skills (`laya.decide`, `laya.train`, `laya.model.promote`, ...) |
+| CLI | `tac compile --json`, `tac episode`, `--tasks <file>` |
+
+Tasks may be declared in the file or supplied with `--tasks`; without either, a
+gate's labels are not checked (`TAC-LAYA-001`). Flow JSON moves to **IR 1.2**
+(edge `label`/`range`, flow `requires`/`schedules`). v0.4 sources compile
+unchanged except for the five fixes listed in [`CHANGELOG.md`](CHANGELOG.md).
+Examples: `examples/laya_*.tac`.
 
 ### Example: Web Q&A Flow
 
