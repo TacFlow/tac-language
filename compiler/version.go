@@ -8,7 +8,7 @@ const (
 	LanguageVersion = "0.5"
 	// CompilerVersion is the release of this compiler. It moves at release
 	// time only (F), never with a feature.
-	CompilerVersion = "0.4.0"
+	CompilerVersion = "0.5.0"
 	// IRVersion is the Flow JSON shape. 1.2 adds edge label/range, flow
 	// requires and flow schedules.
 	IRVersion = "1.2"

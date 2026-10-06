@@ -646,7 +646,7 @@ func TestFlowIRHasEnhancedMetadata(t *testing.T) {
 		t.Fatal("no flows")
 	}
 	fj := flows[0]
-	if fj.Language.CompilerVersion != "0.4.0" {
+	if fj.Language.CompilerVersion != "0.5.0" {
 		t.Errorf("compiler version: %s", fj.Language.CompilerVersion)
 	}
 	if fj.Language.IRVersion != "1.2" {
