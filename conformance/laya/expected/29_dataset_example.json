@@ -1,0 +1,194 @@
+{
+  "only": "",
+  "ok_upstream": true,
+  "ok_dialect": true,
+  "codes_upstream": [],
+  "codes_dialect": [],
+  "shape": {
+    "flows": [],
+    "tasks": [
+      {
+        "name": "acao",
+        "questions": [
+          {
+            "id": "acao",
+            "type": "choice",
+            "instructions": "Qual ação o agente deve tomar neste passo?",
+            "options": [
+              {
+                "label": "proceed",
+                "description": "executar o passo agora (dado ausente/obsoleto)"
+              },
+              {
+                "label": "reuse",
+                "description": "usar resultado em cache válido"
+              },
+              {
+                "label": "skip",
+                "description": "passo provadamente desnecessário"
+              },
+              {
+                "label": "ask",
+                "description": "ambíguo, faltam dados ou risco/custo sem justificação"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "models": [],
+    "episodes": [
+      {
+        "id": "ds-estoque-001",
+        "group_id": "ds-estoque",
+        "state": {
+          "context": {
+            "estoque_atual": 2,
+            "pedido_em_aberto": false,
+            "ponto_reposicao": 10,
+            "sku": "REF-2L-COLA"
+          },
+          "goal": "decidir se reabastece o SKU antes do próximo ciclo de compra"
+        },
+        "questions": [
+          {
+            "id": "acao",
+            "type": "choice",
+            "instructions": "Qual ação o agente deve tomar neste passo?",
+            "options": [
+              {
+                "label": "proceed",
+                "description": "executar o passo agora (dado ausente/obsoleto)"
+              },
+              {
+                "label": "reuse",
+                "description": "usar resultado em cache válido"
+              },
+              {
+                "label": "skip",
+                "description": "passo provadamente desnecessário"
+              },
+              {
+                "label": "ask",
+                "description": "ambíguo, faltam dados ou risco/custo sem justificação"
+              }
+            ]
+          }
+        ],
+        "targets": {
+          "acao": "proceed"
+        },
+        "meta": {
+          "task": "acao"
+        }
+      },
+      {
+        "id": "ds-estoque-002",
+        "group_id": "ds-estoque",
+        "state": {
+          "cache_available": true,
+          "context": {
+            "estoque_atual": 40,
+            "pedido_em_aberto": false,
+            "ponto_reposicao": 10,
+            "sku": "AGUA-500"
+          },
+          "goal": "decidir se reabastece o SKU antes do próximo ciclo de compra"
+        },
+        "questions": [
+          {
+            "id": "acao",
+            "type": "choice",
+            "instructions": "Qual ação o agente deve tomar neste passo?",
+            "options": [
+              {
+                "label": "proceed",
+                "description": "executar o passo agora (dado ausente/obsoleto)"
+              },
+              {
+                "label": "reuse",
+                "description": "usar resultado em cache válido"
+              },
+              {
+                "label": "skip",
+                "description": "passo provadamente desnecessário"
+              },
+              {
+                "label": "ask",
+                "description": "ambíguo, faltam dados ou risco/custo sem justificação"
+              }
+            ]
+          }
+        ],
+        "targets": {
+          "acao": "skip"
+        },
+        "meta": {
+          "task": "acao"
+        }
+      },
+      {
+        "id": "ds-estoque-003",
+        "group_id": "ds-estoque",
+        "state": {
+          "context": {
+            "estoque_atual": 3,
+            "pedido_em_aberto": true,
+            "ponto_reposicao": 10,
+            "sku": "SUCO-1L"
+          },
+          "goal": "decidir se reabastece o SKU antes do próximo ciclo de compra"
+        },
+        "questions": [
+          {
+            "id": "acao",
+            "type": "choice",
+            "instructions": "Qual ação o agente deve tomar neste passo?",
+            "options": [
+              {
+                "label": "proceed",
+                "description": "executar o passo agora (dado ausente/obsoleto)"
+              },
+              {
+                "label": "reuse",
+                "description": "usar resultado em cache válido"
+              },
+              {
+                "label": "skip",
+                "description": "passo provadamente desnecessário"
+              },
+              {
+                "label": "ask",
+                "description": "ambíguo, faltam dados ou risco/custo sem justificação"
+              }
+            ]
+          }
+        ],
+        "targets": {
+          "acao": "ask"
+        },
+        "meta": {
+          "task": "acao"
+        }
+      }
+    ],
+    "datasets": [
+      {
+        "name": "acao_v1",
+        "task": "acao",
+        "from": "db",
+        "include": [
+          "ds-estoque-001",
+          "ds-estoque-002",
+          "ds-estoque-003"
+        ],
+        "splits": {
+          "calibration": 0.1,
+          "test": 0.1,
+          "train": 0.7,
+          "validation": 0.1
+        }
+      }
+    ]
+  }
+}

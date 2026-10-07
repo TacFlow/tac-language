@@ -587,6 +587,23 @@ func FuzzParser(f *testing.F) {
 		`on "event" { cron: "* * * * *" } -> handler`,
 		`context "ctx" { remember x = "y" }`,
 		`auto_summarize(max: 100, scope: "session")`,
+		// v0.5 (LAYA)
+		`[`,
+		`[<-5]`,
+		`gate[`,
+		`flow "g" { node "gate" -> skill laya.decide(task: "t", input: payload) gate[<-5] -> a gate[*] -> b }`,
+		`flow "g" { gate[10..50] -> a gate[>=50] -> b gate["x y"] -> c gate[true] -> d }`,
+		`flow "s" { schedule "0 3 * * *" tz "Europe/Lisbon" on "x.y" -> a a -> b -> c }`,
+		`requires "0.5"`,
+		`task "t" { question q: choice "Q?" { a: "1", b: "2" } profile { match: { any_path: ["$.a"] } } }`,
+		`model "m" { tasks ["t"] base "b" port 18101 }`,
+		`episode "e" { group "g" goal "x" context { a: -1.5, b: [1, 2] } rule "r" tool "t" k true question q: number "N" { range: [-10, 10] } target q = -3 meta { synthetic: true } }`,
+		`dataset "d" { task "t" from "db" include "a", "b" split train = 0.7 split test = 0.3 }`,
+		`remember x = [}`,		// deep nesting: a parse error past parser.MaxDepth, never a stack overflow (I-4)
+		"remember x = " + strings.Repeat("[", 513) + strings.Repeat("]", 513),
+		"remember x = " + strings.Repeat("{a: ", 513) + "1" + strings.Repeat("}", 513),
+		`flow "f" { node "a" -> skill s(x: ` + strings.Repeat("[", 5000) + `) }`,
+		`flow "f" { node "a" ` + strings.Repeat("{ if x ", 513) + strings.Repeat("}", 513) + ` }`,
 	}
 
 	for _, s := range seeds {

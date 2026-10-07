@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"github.com/TacFlow/tac-language/ast"
+	"github.com/TacFlow/tac-language/laya"
 	"github.com/TacFlow/tac-language/types"
 )
 
@@ -419,6 +420,9 @@ type Analyzer struct {
 	inputs map[string]types.TrustType
 	// Track declared agents
 	agents map[string]bool
+	// LAYA task registry: file `task` declarations plus SetTasks.
+	tasks     map[string]laya.Task
+	registry_ bool // a registry exists (file tasks or SetTasks)
 }
 
 // New creates a new Analyzer in development mode.
@@ -518,6 +522,12 @@ func (a *Analyzer) Analyze(program *ast.Node) []Diagnostic {
 	// Pass 1: collect top-level inputs, agents
 	a.collectGlobals(program)
 
+	// Pass 1b (v0.5): LAYA declarations, requires, top-level forms.
+	a.analyzeDecls(program)
+
+	// Pass 1c (v0.5): every number literal must fit a float64 (I-1).
+	a.checkNumberLiterals(program)
+
 	// Pass 2: validate each flow
 	for _, flow := range ast.CollectFlows(program) {
 		a.validateFlow(flow)
@@ -578,6 +588,9 @@ func (a *Analyzer) validateContext(ctx *ast.Node) {
 			a.validateRemember(child)
 		case ast.NodeRecallStmt:
 			a.validateRecall(child)
+		case ast.NodeUnrecognized:
+			a.warningf(DiagParse+"-001", child.Pos.Line, child.Pos.Col,
+				"context: unrecognized form starting at %s; it was ignored", child.Value)
 		}
 	}
 }
@@ -629,6 +642,10 @@ func (a *Analyzer) validateFlow(flow *ast.Node) {
 	// --- Collect and validate edges ---
 	adjacency := make(map[string][]string) // source -> targets
 	inDegree := make(map[string]int)
+	// fallbacks: source -> `else:` targets. Not dependencies (no cycle check),
+	// but a fallback runs when its edge's condition fails, so it is reachable
+	// (bug e, v0.4.0: else targets were reported TAC-GRAPH-003).
+	fallbacks := make(map[string][]string)
 
 	// Initialize in-degree for all declared nodes
 	for name := range declared {
@@ -664,6 +681,8 @@ func (a *Analyzer) validateFlow(flow *ast.Node) {
 				if _, ok := declared[fallback]; !ok {
 					a.errorf("", edge.Pos.Line, edge.Pos.Col,
 						"flow %q: else target %q is not a declared node", flowName, fallback)
+				} else {
+					fallbacks[src] = append(fallbacks[src], fallback)
 				}
 			}
 		}
@@ -681,7 +700,11 @@ func (a *Analyzer) validateFlow(flow *ast.Node) {
 	// from every node with indegree zero. In a disconnected DAG each
 	// component has a zero-indegree node, so indegree alone is not a
 	// sound proxy for reachability.
-	reachable := a.computeReachable(flow, declared, adjacency)
+	reachAdj := make(map[string][]string, len(adjacency))
+	for k, v := range adjacency {
+		reachAdj[k] = append(append([]string(nil), v...), fallbacks[k]...)
+	}
+	reachable := a.computeReachable(flow, declared, reachAdj)
 	for name := range declared {
 		if !reachable[name] {
 			a.report(DiagGraph+"-003", declared[name].Pos.Line, declared[name].Pos.Col,
@@ -703,6 +726,31 @@ func (a *Analyzer) validateFlow(flow *ast.Node) {
 
 	// --- Validate input references ---
 	a.validateInputReferences(flow, flowName)
+
+	// --- Input type names (SPEC §5.2 rule 3) ---
+	a.validateInputTypes(flow, flowName)
+
+	// --- v0.5: unrecognised forms, schedules, events, gates ---
+	a.validateLayaFlow(flow, flowName, declared)
+}
+
+// validateInputTypes warns (TAC-TYPE-001) about an input whose type is
+// neither a trust type nor a value type. SPEC §5.2 rule 3: an unrecognised
+// name means "unconstrained", with a warning — never an error. Bug c,
+// v0.4.0: no warning was raised.
+func (a *Analyzer) validateInputTypes(flow *ast.Node, flowName string) {
+	for _, child := range flow.Children {
+		if child.Type != ast.NodeInput || len(child.Children) < 2 {
+			continue
+		}
+		name, typ := child.Children[0].Value, child.Children[1]
+		if types.IsValidTrustType(typ.Value) || types.IsValueType(typ.Value) {
+			continue
+		}
+		a.warningf(DiagType+"-001", typ.Pos.Line, typ.Pos.Col,
+			"flow %q: input %q has unknown type %q; it is unconstrained (value types: %s; trust types: %s)",
+			flowName, name, typ.Value, strings.Join(types.ValueTypes, ", "), strings.Join(trustTypeNames(), ", "))
+	}
 }
 
 func (a *Analyzer) validateNodeDef(node *ast.Node, flowName string, declared map[string]*ast.Node) {
@@ -725,6 +773,7 @@ func (a *Analyzer) validateNodeDef(node *ast.Node, flowName string, declared map
 // In development mode unknown skills are warnings; in production they are errors.
 // Dynamic skills require digest + signature + schemas in production.
 func (a *Analyzer) validateSkillCall(call *ast.Node, flowName, nodeName string) {
+	a.checkArgsOnce(call, flowName, nodeName)
 	skillName := call.Value
 	version := call.Version
 	spec, ok := a.registry.LookupVersioned(skillName, version)
@@ -783,6 +832,47 @@ func (a *Analyzer) validateSkillCall(call *ast.Node, flowName, nodeName string) 
 					"flow %q node %q: skill %q does not declare argument %q (known: %s)",
 					flowName, nodeName, skillName, arg.Value, strings.Join(spec.Args, ", "))
 			}
+		}
+	}
+}
+
+// checkArgsOnce warns about an argument given more than once. The compiler
+// keeps a named argument under its own name and a positional one as
+// arg<i> (compileArgs), all in one map, so the last value in the source
+// replaces the earlier ones: `s(q: 1, q: 2)`, `s(q: 1) { q: 2 }`,
+// `s(1, arg0: 2)`. A warning, not an error: v0.4 compiled such sources and
+// v0.5 still does, with the same IR. Known and unknown skills alike.
+func (a *Analyzer) checkArgsOnce(call *ast.Node, flowName, nodeName string) {
+	seen := make(map[string]bool)
+	pos := 0
+	for _, arg := range call.Args {
+		if arg == nil {
+			continue
+		}
+		key := arg.Value
+		if arg.Type != ast.NodeNamedArg {
+			key = fmt.Sprintf("arg%d", pos)
+			pos++
+		}
+		if seen[key] {
+			a.warningf("", arg.Pos.Line, arg.Pos.Col,
+				"flow %q node %q: argument %q is given more than once; keep one", flowName, nodeName, key)
+		}
+		seen[key] = true
+	}
+	keys := make([]string, 0, len(call.Attrs))
+	for k := range call.Attrs {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		if seen[k] {
+			p := call.Pos
+			if v := call.Attrs[k]; v != nil {
+				p = v.Pos
+			}
+			a.warningf("", p.Line, p.Col,
+				"flow %q node %q: argument %q is given more than once; keep one", flowName, nodeName, k)
 		}
 	}
 }

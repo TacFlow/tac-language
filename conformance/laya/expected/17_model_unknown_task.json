@@ -1,0 +1,30 @@
+{
+  "only": "",
+  "ok_upstream": true,
+  "ok_dialect": true,
+  "codes_upstream": [
+    "TAC-LAYA-010",
+    "TAC-LAYA-010"
+  ],
+  "codes_dialect": [
+    "TAC-LAYA-010",
+    "TAC-LAYA-010"
+  ],
+  "shape": {
+    "flows": [],
+    "tasks": [],
+    "models": [
+      {
+        "name": "estoque",
+        "tasks": [
+          "acao",
+          "inexistente"
+        ],
+        "base": "laya-multilingual",
+        "port": 18101
+      }
+    ],
+    "episodes": [],
+    "datasets": []
+  }
+}

@@ -6,6 +6,7 @@
 //	tac compile <input.tac>            Parse, validate, and output Flow JSON
 //	tac fmt <input.tac>                Format .tac source (canonical style)
 //	tac validate <input.tac>           Parse and run semantic analysis
+//	tac episode <input.tac> [--id ID]  Print a declared LAYA episode as JSON
 //	tac version                        Print version
 //
 // Build:
@@ -16,19 +17,21 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"sort"
 
 	"github.com/TacFlow/tac-language/ast"
 	"github.com/TacFlow/tac-language/compiler"
 	"github.com/TacFlow/tac-language/formatter"
+	"github.com/TacFlow/tac-language/laya"
 	"github.com/TacFlow/tac-language/parser"
 	"github.com/TacFlow/tac-language/semantic"
 )
 
-const version     = "0.4.0"
-const langVersion = "0.4"
-const irVersion   = "1.1"
+const version = compiler.CompilerVersion
+const langVersion = compiler.LanguageVersion
+const irVersion = compiler.IRVersion
 
 func main() {
 	if len(os.Args) < 2 {
@@ -51,6 +54,13 @@ func main() {
 		}
 		mode := parseMode()
 		cmdCompile(os.Args[2], mode)
+
+	case "episode":
+		if len(os.Args) < 3 {
+			fmt.Fprintln(os.Stderr, "Usage: tac episode <input.tac> [--id <episode id>] [--mode production|development] [--registry <file.json>] [--tasks <file.json>]")
+			os.Exit(1)
+		}
+		os.Exit(cmdEpisode(os.Args[2], flagValue(os.Args[2:], "--id")))
 
 	case "fmt":
 		if len(os.Args) < 3 {
@@ -105,6 +115,8 @@ Usage:
   tac compile <input.tac> [flags]        Parse, validate, and output Flow JSON
   tac fmt <input.tac>                    Format .tac source (canonical style)
   tac validate <input.tac> [flags]       Parse and run semantic analysis
+  tac episode <input.tac> [flags]        Print a declared LAYA episode as JSON
+                                         (--id <id> picks one of several)
   tac inspect <input.tac>                Show flow structure summary
   tac fingerprint <input.tac> [flags]    Show flow compilation fingerprint
   tac version                            Print version
@@ -114,6 +126,9 @@ Flags:
   --strict                  Alias for --mode production
   --mode production|development   Strictness mode (default: development)
   --registry <file.json>    Load custom skill registry from JSON file
+  --tasks <file.json>       LAYA task registry ([{name, questions}]) for gate label checks
+  --json                    (compile) print the whole program: flows, tasks, models,
+                            episodes and datasets
 
 Examples:
   tac parse my_flow.tac
@@ -187,7 +202,21 @@ func cmdCompile(path string, mode semantic.Mode) {
 	}
 
 	registry := loadRegistry()
+	tasks := mustLoadTasks()
+	if hasFlag(os.Args[2:], "--json") {
+		out, diags, err := programJSON(source, registry, tasks, mode)
+		printDiags(diags)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Compile error: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Println(string(out))
+		return
+	}
 	analyzer := semantic.NewWithRegistry(registry, mode)
+	if tasks != nil {
+		analyzer.SetTasks(tasks)
+	}
 	diags := analyzer.Analyze(program)
 	if analyzer.HasErrors() {
 		fmt.Fprintf(os.Stderr, "Semantic validation failed (%s mode):\n", mode)
@@ -224,14 +253,42 @@ func cmdFmt(path string) {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
+	if code := runFmt(source, os.Stdout, os.Stderr); code != 0 {
+		os.Exit(code)
+	}
+}
 
+// runFmt is `tac fmt` on source: the formatted text on stdout and the exit
+// code.
+func runFmt(source string, stdout, stderr io.Writer) int {
 	program, err := parser.ParseSource(source)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Parse error: %v\n", err)
-		os.Exit(1)
+		fmt.Fprintf(stderr, "Parse error: %v\n", err)
+		return 1
 	}
 
-	fmt.Print(formatter.Format(program))
+	// The formatter prints what the parser read: a form it skipped
+	// (TAC-PARSE-001) would vanish from the output. Refuse instead of
+	// deleting the user's text.
+	unreadable := false
+	ast.Walk(program, func(n *ast.Node, _ int) bool {
+		if n.Type == ast.NodeUnrecognized || n.Type == ast.NodeGluedNumber {
+			unreadable = true
+		}
+		return !unreadable
+	})
+	if unreadable {
+		for _, d := range semantic.New().Analyze(program) {
+			if d.Code == semantic.DiagParse+"-001" {
+				fmt.Fprintf(stderr, "%s\n", d)
+			}
+		}
+		fmt.Fprintln(stderr, "tac fmt: not formatted — the source has text the parser could not read (TAC-PARSE-001), which formatting would delete; fix it first")
+		return 1
+	}
+
+	fmt.Fprint(stdout, formatter.Format(program))
+	return 0
 }
 
 func cmdValidate(path string, mode semantic.Mode) {
@@ -249,6 +306,9 @@ func cmdValidate(path string, mode semantic.Mode) {
 
 	registry := loadRegistry()
 	analyzer := semantic.NewWithRegistry(registry, mode)
+	if tasks := mustLoadTasks(); tasks != nil {
+		analyzer.SetTasks(tasks)
+	}
 	diags := analyzer.Analyze(program)
 
 	fmt.Printf("Mode: %s", mode)
@@ -424,4 +484,51 @@ func registryPath() string {
 		}
 	}
 	return ""
+}
+
+// mustLoadTasks reads the --tasks file, exiting on a bad file: a registry
+// the user asked for and did not get would silently stop label checks.
+func mustLoadTasks() []laya.Task {
+	tasks, err := loadTasks(flagValue(os.Args[2:], "--tasks"))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
+	return tasks
+}
+
+// printDiags writes every diagnostic to stderr (errors and warnings).
+func printDiags(diags []semantic.Diagnostic) { fprintDiags(os.Stderr, diags) }
+
+func fprintDiags(w io.Writer, diags []semantic.Diagnostic) {
+	for _, d := range diags {
+		if d.Severity == semantic.SeverityError {
+			fmt.Fprintf(w, "  %s\n", d)
+		} else {
+			fmt.Fprintf(w, "Warning: %s\n", d)
+		}
+	}
+}
+
+// cmdEpisode implements `tac episode`; it returns the exit code.
+func cmdEpisode(path, id string) int {
+	return runEpisode(path, id, os.Stdout, os.Stderr)
+}
+
+// runEpisode is `tac episode` writing to stdout/stderr; the flags come from
+// os.Args like every other command's.
+func runEpisode(path, id string, stdout, stderr io.Writer) int {
+	source, err := readSource(path)
+	if err != nil {
+		fmt.Fprintf(stderr, "Error: %v\n", err)
+		return 1
+	}
+	out, diags, err := episodeJSON(source, id, loadRegistry(), mustLoadTasks(), parseMode())
+	fprintDiags(stderr, diags)
+	if err != nil {
+		fmt.Fprintf(stderr, "Error: %v\n", err)
+		return 1
+	}
+	fmt.Fprintln(stdout, string(out))
+	return 0
 }

@@ -51,6 +51,9 @@ const (
 	Newline
 	Comment
 	Error
+	// v0.5 (LAYA). Appended after Error so every v0.4 token value is unchanged.
+	Star   // * (wildcard branch in gate[*])
+	DotDot // .. (numeric range in gate[10..50])
 )
 
 // Token represents a single lexical token with source location.
@@ -130,6 +133,10 @@ func tokenTypeName(t TokenType) string {
 		return "]"
 	case At:
 		return "@"
+	case Star:
+		return "*"
+	case DotDot:
+		return ".."
 	default:
 		return fmt.Sprintf("token(%d)", t)
 	}
@@ -182,6 +189,7 @@ type Lexer struct {
 	line   int
 	col    int
 	tokens []Token
+	glued  []Glued // v0.5: numbers glued to identifier text
 }
 
 // New creates a new Lexer for the given source text.
@@ -331,8 +339,51 @@ func (l *Lexer) scanNumber() {
 			break
 		}
 	}
-	l.emit(Number, string(l.source[start:l.pos]))
+	// v0.5: an exponent (`1e3`, `2.5E-4`, `1e+21`) is part of the number —
+	// valid JSON number syntax. v0.4 read `1e3` as 1 followed by `e3`.
+	if l.pos < len(l.source) && (l.source[l.pos] == 'e' || l.source[l.pos] == 'E') {
+		j := l.pos + 1
+		if j < len(l.source) && (l.source[j] == '+' || l.source[j] == '-') {
+			j++
+		}
+		if j < len(l.source) && isDigit(l.source[j]) {
+			for l.pos < j {
+				l.advance()
+			}
+			for l.pos < len(l.source) && isDigit(l.source[l.pos]) {
+				l.advance()
+			}
+		}
+	}
+	lit := string(l.source[start:l.pos])
+	l.emit(Number, lit)
+	// Any other text glued to the number (`3x`, `2.5kg`, `1_000`) still lexes
+	// exactly as in v0.4 — the number, then the rest — but is recorded, so
+	// the analyzer can warn (TAC-PARSE-001) instead of staying silent.
+	if l.pos < len(l.source) && isIdentStart(l.source[l.pos]) {
+		end := l.pos
+		for end < len(l.source) && (isIdentStart(l.source[end]) || isDigit(l.source[end]) || l.source[end] == '.') {
+			end++
+		}
+		// Col: where the number starts (a number never spans lines and is
+		// ASCII), not the column after it that tokens carry.
+		l.glued = append(l.glued, Glued{Line: l.line, Col: l.col - len(lit), Number: lit, Rest: string(l.source[l.pos:end])})
+	}
 }
+
+// Glued is a number immediately followed by identifier text (`3x`): v0.4
+// semantics are kept (two tokens), and the parser reports it. Line and Col
+// are where the number starts.
+type Glued struct {
+	Line, Col int
+	Number    string
+	Rest      string
+}
+
+// Glued returns the numbers Scan found glued to identifier text.
+func (l *Lexer) Glued() []Glued { return l.glued }
+
+func isIdentStart(r rune) bool { return (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || r == '_' }
 
 // Scan converts the source into a slice of tokens.
 // It returns an error if tokenization fails (e.g. unterminated string).
@@ -362,6 +413,11 @@ func (l *Lexer) Scan() ([]Token, error) {
 			l.advance()
 			l.advance()
 			l.emit(Arrow, "->")
+		case ch == '-' && l.pos+1 < len(l.source) && isDigit(l.source[l.pos+1]) && !l.prevIsOperand():
+			// v0.5: a negative number literal. Only where a value can start —
+			// TAC has no subtraction, so after an operand '-' stays an error.
+			l.advance()
+			l.scanNumber()
 		case ch == '<' && l.pos+1 < len(l.source) && l.source[l.pos+1] == '-':
 			l.advance()
 			l.advance()
@@ -424,9 +480,16 @@ func (l *Lexer) Scan() ([]Token, error) {
 		case ch == '@':
 			l.advance()
 			l.emit(At, "@")
+		case ch == '.' && l.pos+1 < len(l.source) && l.source[l.pos+1] == '.':
+			l.advance()
+			l.advance()
+			l.emit(DotDot, "..")
 		case ch == '.':
 			l.advance()
 			l.emit(Dot, ".")
+		case ch == '*':
+			l.advance()
+			l.emit(Star, "*")
 		case (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == '_':
 			l.advance()
 			l.scanIdentifier()
@@ -441,6 +504,24 @@ func (l *Lexer) Scan() ([]Token, error) {
 	}
 	l.emit(EOF, "")
 	return l.tokens, nil
+}
+
+func isDigit(r rune) bool { return r >= '0' && r <= '9' }
+
+// prevIsOperand reports whether the last significant token ends a value, in
+// which case a following '-' cannot start a negative number.
+func (l *Lexer) prevIsOperand() bool {
+	for i := len(l.tokens) - 1; i >= 0; i-- {
+		switch l.tokens[i].Type {
+		case Comment:
+			continue
+		case Ident, Number, String, True, False, RParen, RBrack, RBrace:
+			return true
+		default:
+			return false
+		}
+	}
+	return false
 }
 
 // HasErrors checks if any token in the stream is an error.
@@ -459,7 +540,7 @@ func TokenValue(tok Token) (interface{}, error) {
 	case String:
 		return tok.Value, nil
 	case Number:
-		if strings.Contains(tok.Value, ".") {
+		if strings.ContainsAny(tok.Value, ".eE") {
 			return strconv.ParseFloat(tok.Value, 64)
 		}
 		return strconv.Atoi(tok.Value)

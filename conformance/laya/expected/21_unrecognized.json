@@ -1,0 +1,32 @@
+{
+  "only": "",
+  "ok_upstream": true,
+  "ok_dialect": true,
+  "codes_upstream": [
+    "TAC-PARSE-001"
+  ],
+  "codes_dialect": [
+    "TAC-PARSE-001"
+  ],
+  "shape": {
+    "flows": [
+      {
+        "name": "unrecognized",
+        "nodes": [
+          {
+            "name": "a",
+            "skill": "laya.tasks.list",
+            "args": {}
+          }
+        ],
+        "edges": [],
+        "triggers": [],
+        "schedules": []
+      }
+    ],
+    "tasks": [],
+    "models": [],
+    "episodes": [],
+    "datasets": []
+  }
+}

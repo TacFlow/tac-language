@@ -1,0 +1,37 @@
+{
+  "only": "",
+  "ok_upstream": true,
+  "ok_dialect": true,
+  "codes_upstream": [],
+  "codes_dialect": [],
+  "shape": {
+    "flows": [],
+    "tasks": [],
+    "models": [],
+    "episodes": [
+      {
+        "id": "ep-quoted-keys",
+        "group_id": "conformance",
+        "state": {
+          "context": {
+            "lote/validade": "2026-12",
+            "qtd": 3,
+            "sku id": "REF-2L"
+          },
+          "goal": "chaves de context que não são identificadores"
+        },
+        "questions": [
+          {
+            "id": "repor",
+            "type": "binary",
+            "instructions": "Repor?"
+          }
+        ],
+        "targets": {
+          "repor": true
+        }
+      }
+    ],
+    "datasets": []
+  }
+}

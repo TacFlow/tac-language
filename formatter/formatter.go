@@ -106,7 +106,7 @@ func (w *fmtWriter) writeObjectLiteral(n *ast.Node) {
 	w.depth++
 	for _, key := range sortedMapKeys(n.MapVal) {
 		val := n.MapVal[key]
-		w.writeln("%s: ", key)
+		w.writeln("%s: ", keyStr(key))
 		w.depth++
 		w.writeln("%s", nodeValueStr(val))
 		w.depth--
@@ -156,8 +156,54 @@ func (w *fmtWriter) writeSkillCall(n *ast.Node) {
 	}
 }
 
+// writeBlockBody writes the statements of a node block — skill calls,
+// `if`/`else` branches and `for each` loops — so that formatting never drops
+// them (v0.4.0 wrote an empty `{ }`, which the next format then removed).
+func (w *fmtWriter) writeBlockBody(nodes []*ast.Node) {
+	for _, sub := range nodes {
+		switch {
+		case sub.Type == ast.NodeSkillCall:
+			w.write("%sskill ", w.indent())
+			w.writeSkillCall(sub)
+			w.write("\n")
+		case sub.Type == ast.NodeCondition:
+			head := sub.Value
+			if len(sub.Children) > 0 && sub.Children[0].Value != "" {
+				head += " " + sub.Children[0].Value
+			}
+			w.writeln("%s {", head)
+			w.depth++
+			w.writeBlockBody(sub.Nodes)
+			w.depth--
+			w.writeln("}")
+		case sub.Type == ast.NodeIdentifier && sub.Value == "for_each":
+			head := "for each"
+			if len(sub.Children) > 0 {
+				head += " " + sub.Children[0].Value
+			}
+			if len(sub.Children) > 1 {
+				head += " in " + sub.Children[1].Value
+			}
+			w.writeln("%s {", head)
+			w.depth++
+			w.writeBlockBody(sub.Nodes)
+			w.depth--
+			w.writeln("}")
+		}
+	}
+}
+
 func (w *fmtWriter) writeNodeDef(n *ast.Node) {
 	nodeName := ast.NodeName(n)
+	if len(n.Children) <= 1 && len(n.Nodes) > 0 && n.Attrs == nil {
+		// A block node without a target: `node "x" { if … { skill … } }`.
+		w.writeln("node %q {", nodeName)
+		w.depth++
+		w.writeBlockBody(n.Nodes)
+		w.depth--
+		w.writeln("}")
+		return
+	}
 	w.write("%snode %q -> ", w.indent(), nodeName)
 	if len(n.Children) > 1 {
 		call := n.Children[1]
@@ -205,7 +251,11 @@ func (w *fmtWriter) writeNodeDef(n *ast.Node) {
 func (w *fmtWriter) writeEdge(e *ast.Node) {
 	src := ast.EdgeSource(e)
 	tgt := ast.EdgeTarget(e)
-	w.write("%s%s -> %s", w.indent(), src, tgt)
+	if b := ast.EdgeLabel(e); b != nil {
+		w.write("%s%s[%s] -> %s", w.indent(), src, branchStr(b), tgt)
+	} else {
+		w.write("%s%s -> %s", w.indent(), src, tgt)
+	}
 	if e.Attrs != nil {
 		if cond, ok := e.Attrs["if"]; ok {
 			w.write(" {\n")
@@ -293,6 +343,13 @@ func (w *fmtWriter) writeFlow(flow *ast.Node) {
 				w.depth--
 			}
 			w.writeln("}")
+		}
+	}
+
+	// Schedules (v0.5)
+	for _, child := range flow.Children {
+		if child.Type == ast.NodeSchedule {
+			w.writeSchedule(child)
 		}
 	}
 
@@ -434,6 +491,10 @@ func (w *fmtWriter) writeProgram(program *ast.Node) {
 			w.writeln("forget %s", name)
 		case ast.NodeAutoSummarize:
 			w.writeAutoSummarize(n)
+		case ast.NodeRequires:
+			w.writeln("requires %q", n.Value)
+		case ast.NodeTaskDecl, ast.NodeModelDecl, ast.NodeEpisodeDecl, ast.NodeDatasetDecl:
+			w.writeDecl(n)
 		}
 		w.write("\n")
 	}
@@ -482,7 +543,7 @@ func nodeValueStr(n *ast.Node) string {
 		parts := make([]string, 0, len(keys))
 		for _, key := range keys {
 			val := n.MapVal[key]
-			parts = append(parts, fmt.Sprintf("%s: %s", key, nodeValueStr(val)))
+			parts = append(parts, fmt.Sprintf("%s: %s", keyStr(key), nodeValueStr(val)))
 		}
 		return fmt.Sprintf("{%s}", strings.Join(parts, ", "))
 	case ast.NodeArrayLiteral:

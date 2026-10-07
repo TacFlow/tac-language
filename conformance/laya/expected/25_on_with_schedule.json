@@ -1,0 +1,49 @@
+{
+  "only": "",
+  "ok_upstream": true,
+  "ok_dialect": true,
+  "codes_upstream": [
+    "TAC-EVT-002"
+  ],
+  "codes_dialect": [
+    "TAC-EVT-002"
+  ],
+  "shape": {
+    "flows": [
+      {
+        "name": "on_with_schedule",
+        "nodes": [
+          {
+            "name": "ev",
+            "skill": "laya.eval",
+            "args": {
+              "model": "estoque",
+              "run": {
+                "ref": "payload.run"
+              }
+            }
+          }
+        ],
+        "edges": [],
+        "triggers": [
+          {
+            "event": "laya.train.completed",
+            "targets": [
+              "ev"
+            ]
+          }
+        ],
+        "schedules": [
+          {
+            "cron": "0 3 * * *",
+            "tz": "Europe/Lisbon"
+          }
+        ]
+      }
+    ],
+    "tasks": [],
+    "models": [],
+    "episodes": [],
+    "datasets": []
+  }
+}

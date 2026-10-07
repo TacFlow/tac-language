@@ -1,0 +1,1549 @@
+{
+  "examples/graph_builder.tac": {
+    "flows": [
+      {
+        "flow_id": "",
+        "name": "Graph Builder",
+        "version": "1.0",
+        "language": {
+          "name": "TAC",
+          "language_version": "0.4",
+          "compiler_version": "0.4.0",
+          "ir_version": "1.1"
+        },
+        "nodes": [
+          {
+            "id": "n0",
+            "name": "fetch",
+            "skill": "web_search",
+            "args": {
+              "arg0": "query",
+              "arg1": "count"
+            },
+            "pos": {
+              "line": 6,
+              "col": 7
+            }
+          },
+          {
+            "id": "n1",
+            "name": "extract",
+            "skill": "llm.chat",
+            "args": {
+              "arg0": "prompt",
+              "arg1": "context"
+            },
+            "pos": {
+              "line": 7,
+              "col": 7
+            }
+          },
+          {
+            "id": "n2",
+            "name": "verify",
+            "skill": "verify",
+            "args": {
+              "arg0": "source"
+            },
+            "pos": {
+              "line": 11,
+              "col": 7
+            }
+          },
+          {
+            "id": "n3",
+            "name": "store_nodes",
+            "skill": "memory_store",
+            "args": {
+              "arg0": "text",
+              "arg1": "tags"
+            },
+            "pos": {
+              "line": 12,
+              "col": 7
+            }
+          },
+          {
+            "id": "n4",
+            "name": "relate_nodes",
+            "skill": "",
+            "pos": {
+              "line": 16,
+              "col": 7
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "n0",
+            "to": "n1"
+          },
+          {
+            "from": "n1",
+            "to": "n2"
+          },
+          {
+            "from": "n2",
+            "to": "n3"
+          },
+          {
+            "from": "n2",
+            "to": "n4"
+          }
+        ],
+        "triggers": [
+          {
+            "event": "init",
+            "targets": [
+              "n0"
+            ]
+          }
+        ],
+        "manifest": {
+          "name": "Graph Builder",
+          "version": "1.0",
+          "inputs": [
+            {
+              "name": "url",
+              "trust_type": "Untrusted",
+              "required": true
+            }
+          ],
+          "skills": [
+            {
+              "skill": "llm.chat",
+              "node": "extract"
+            },
+            {
+              "skill": "web_search",
+              "node": "fetch"
+            },
+            {
+              "skill": "memory_store",
+              "node": "store_nodes"
+            },
+            {
+              "skill": "verify",
+              "node": "verify"
+            }
+          ],
+          "node_count": 5,
+          "edge_count": 4
+        }
+      }
+    ],
+    "diags": []
+  },
+  "examples/input_conformance.tac": {
+    "flows": [
+      {
+        "flow_id": "",
+        "name": "Conformance",
+        "version": "1.0",
+        "language": {
+          "name": "TAC",
+          "language_version": "0.4",
+          "compiler_version": "0.4.0",
+          "ir_version": "1.1"
+        },
+        "nodes": [
+          {
+            "id": "n0",
+            "name": "clean",
+            "skill": "validate",
+            "args": {
+              "arg0": "value"
+            },
+            "pos": {
+              "line": 30,
+              "col": 7
+            }
+          },
+          {
+            "id": "n1",
+            "name": "answer",
+            "skill": "llm.chat",
+            "args": {
+              "arg0": "prompt"
+            },
+            "pos": {
+              "line": 31,
+              "col": 7
+            }
+          },
+          {
+            "id": "n2",
+            "name": "check",
+            "skill": "verify",
+            "args": {
+              "arg0": "source"
+            },
+            "pos": {
+              "line": 32,
+              "col": 7
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "n0",
+            "to": "n1"
+          },
+          {
+            "from": "n1",
+            "to": "n2"
+          }
+        ],
+        "triggers": [
+          {
+            "event": "user_message",
+            "targets": [
+              "n0"
+            ]
+          }
+        ],
+        "manifest": {
+          "name": "Conformance",
+          "version": "1.0",
+          "inputs": [
+            {
+              "name": "a",
+              "trust_type": "Untrusted",
+              "required": true
+            },
+            {
+              "name": "b",
+              "trust_type": "Untrusted",
+              "required": true
+            },
+            {
+              "name": "c",
+              "trust_type": "Untrusted",
+              "required": true
+            },
+            {
+              "name": "d",
+              "trust_type": "Untrusted",
+              "required": true
+            },
+            {
+              "name": "e",
+              "trust_type": "Untrusted",
+              "required": true
+            },
+            {
+              "name": "f",
+              "trust_type": "Untrusted",
+              "required": true
+            }
+          ],
+          "skills": [
+            {
+              "skill": "llm.chat",
+              "node": "answer"
+            },
+            {
+              "skill": "verify",
+              "node": "check"
+            },
+            {
+              "skill": "validate",
+              "node": "clean"
+            }
+          ],
+          "node_count": 3,
+          "edge_count": 2
+        }
+      }
+    ],
+    "diags": []
+  },
+  "examples/multi_agent_review.tac": {
+    "flows": [
+      {
+        "flow_id": "",
+        "name": "Multi-Agent Code Review",
+        "version": "1.0",
+        "language": {
+          "name": "TAC",
+          "language_version": "0.4",
+          "compiler_version": "0.4.0",
+          "ir_version": "1.1"
+        },
+        "nodes": [
+          {
+            "id": "n0",
+            "name": "security_task",
+            "skill": "agent_task",
+            "args": {
+              "arg0": "agent",
+              "arg1": "payload"
+            },
+            "pos": {
+              "line": 23,
+              "col": 7
+            }
+          },
+          {
+            "id": "n1",
+            "name": "perf_task",
+            "skill": "agent_task",
+            "args": {
+              "arg0": "agent",
+              "arg1": "payload"
+            },
+            "pos": {
+              "line": 28,
+              "col": 7
+            }
+          },
+          {
+            "id": "n2",
+            "name": "style_task",
+            "skill": "agent_task",
+            "args": {
+              "arg0": "agent",
+              "arg1": "payload"
+            },
+            "pos": {
+              "line": 33,
+              "col": 7
+            }
+          },
+          {
+            "id": "n3",
+            "name": "consolidate",
+            "skill": "llm.chat",
+            "args": {
+              "arg0": "prompt",
+              "arg1": "context"
+            },
+            "pos": {
+              "line": 39,
+              "col": 7
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "n0",
+            "to": "n3"
+          },
+          {
+            "from": "n1",
+            "to": "n3"
+          },
+          {
+            "from": "n2",
+            "to": "n3"
+          }
+        ],
+        "triggers": [
+          {
+            "event": "init",
+            "targets": [
+              "n0",
+              "n1",
+              "n2"
+            ]
+          }
+        ],
+        "manifest": {
+          "name": "Multi-Agent Code Review",
+          "version": "1.0",
+          "inputs": [
+            {
+              "name": "code_snippet",
+              "trust_type": "Untrusted",
+              "required": true
+            }
+          ],
+          "skills": [
+            {
+              "skill": "llm.chat",
+              "node": "consolidate"
+            },
+            {
+              "skill": "agent_task",
+              "node": "perf_task"
+            },
+            {
+              "skill": "agent_task",
+              "node": "security_task"
+            },
+            {
+              "skill": "agent_task",
+              "node": "style_task"
+            }
+          ],
+          "agents": [
+            {
+              "name": "performance_reviewer",
+              "model": "tacflow/deepseek-v4-flash"
+            },
+            {
+              "name": "security_reviewer",
+              "model": "tacflow/deepseek-v4-flash"
+            },
+            {
+              "name": "style_reviewer",
+              "model": "tacflow/deepseek-v4-flash"
+            }
+          ],
+          "node_count": 4,
+          "edge_count": 3
+        }
+      }
+    ],
+    "diags": []
+  },
+  "examples/parameterized_subflow.tac": {
+    "flows": [
+      {
+        "flow_id": "",
+        "name": "Code Review",
+        "version": "1.0",
+        "language": {
+          "name": "TAC",
+          "language_version": "0.4",
+          "compiler_version": "0.4.0",
+          "ir_version": "1.1"
+        },
+        "nodes": [
+          {
+            "id": "n0",
+            "name": "clean",
+            "skill": "validate",
+            "args": {
+              "arg0": "value"
+            },
+            "pos": {
+              "line": 24,
+              "col": 7
+            }
+          },
+          {
+            "id": "n1",
+            "name": "scan",
+            "skill": "memory_search",
+            "args": {
+              "arg0": "query",
+              "arg1": "top_k"
+            },
+            "pos": {
+              "line": 25,
+              "col": 7
+            }
+          },
+          {
+            "id": "n2",
+            "name": "report",
+            "skill": "llm.chat",
+            "args": {
+              "arg0": "prompt"
+            },
+            "pos": {
+              "line": 26,
+              "col": 7
+            }
+          },
+          {
+            "id": "n3",
+            "name": "confirm",
+            "skill": "verify",
+            "args": {
+              "arg0": "source"
+            },
+            "pos": {
+              "line": 27,
+              "col": 7
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "n0",
+            "to": "n1"
+          },
+          {
+            "from": "n1",
+            "to": "n2"
+          },
+          {
+            "from": "n2",
+            "to": "n3"
+          }
+        ],
+        "triggers": [
+          {
+            "event": "review_requested",
+            "targets": [
+              "n0"
+            ]
+          }
+        ],
+        "manifest": {
+          "name": "Code Review",
+          "version": "1.0",
+          "inputs": [
+            {
+              "name": "target",
+              "trust_type": "Untrusted",
+              "required": true
+            },
+            {
+              "name": "depth",
+              "trust_type": "Untrusted",
+              "required": true
+            },
+            {
+              "name": "strict",
+              "trust_type": "Untrusted",
+              "required": true
+            }
+          ],
+          "skills": [
+            {
+              "skill": "validate",
+              "node": "clean"
+            },
+            {
+              "skill": "verify",
+              "node": "confirm"
+            },
+            {
+              "skill": "llm.chat",
+              "node": "report"
+            },
+            {
+              "skill": "memory_search",
+              "node": "scan"
+            }
+          ],
+          "node_count": 4,
+          "edge_count": 3
+        }
+      },
+      {
+        "flow_id": "",
+        "name": "Nightly Review",
+        "version": "1.0",
+        "language": {
+          "name": "TAC",
+          "language_version": "0.4",
+          "compiler_version": "0.4.0",
+          "ir_version": "1.1"
+        },
+        "nodes": [
+          {
+            "id": "n0",
+            "name": "run_review",
+            "skill": "flow.run",
+            "args": {
+              "arg0": "flow",
+              "arg1": "params"
+            },
+            "pos": {
+              "line": 43,
+              "col": 7
+            }
+          },
+          {
+            "id": "n1",
+            "name": "announce",
+            "skill": "tts.speak",
+            "args": {
+              "arg0": "text"
+            },
+            "pos": {
+              "line": 44,
+              "col": 7
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "n0",
+            "to": "n1"
+          }
+        ],
+        "triggers": [
+          {
+            "event": "schedule_fired",
+            "targets": [
+              "n0"
+            ]
+          }
+        ],
+        "manifest": {
+          "name": "Nightly Review",
+          "version": "1.0",
+          "inputs": [
+            {
+              "name": "branch",
+              "trust_type": "Untrusted",
+              "required": true
+            }
+          ],
+          "skills": [
+            {
+              "skill": "tts.speak",
+              "node": "announce"
+            },
+            {
+              "skill": "flow.run",
+              "node": "run_review"
+            }
+          ],
+          "node_count": 2,
+          "edge_count": 1
+        }
+      }
+    ],
+    "diags": []
+  },
+  "examples/typed_inputs.tac": {
+    "flows": [
+      {
+        "flow_id": "",
+        "name": "Search And Summarize",
+        "version": "1.0",
+        "language": {
+          "name": "TAC",
+          "language_version": "0.4",
+          "compiler_version": "0.4.0",
+          "ir_version": "1.1"
+        },
+        "nodes": [
+          {
+            "id": "n0",
+            "name": "search",
+            "skill": "web_search",
+            "args": {
+              "arg0": "query",
+              "arg1": "count"
+            },
+            "pos": {
+              "line": 33,
+              "col": 7
+            }
+          },
+          {
+            "id": "n1",
+            "name": "summarize",
+            "skill": "llm.chat",
+            "args": {
+              "arg0": "prompt"
+            },
+            "pos": {
+              "line": 34,
+              "col": 7
+            }
+          },
+          {
+            "id": "n2",
+            "name": "check",
+            "skill": "verify",
+            "args": {
+              "arg0": "source"
+            },
+            "pos": {
+              "line": 35,
+              "col": 7
+            }
+          },
+          {
+            "id": "n3",
+            "name": "remember",
+            "skill": "memory_store",
+            "args": {
+              "arg0": "text",
+              "arg1": "shared"
+            },
+            "pos": {
+              "line": 36,
+              "col": 7
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "n0",
+            "to": "n1"
+          },
+          {
+            "from": "n1",
+            "to": "n2"
+          },
+          {
+            "from": "n2",
+            "to": "n3"
+          }
+        ],
+        "triggers": [
+          {
+            "event": "user_message",
+            "targets": [
+              "n0"
+            ]
+          }
+        ],
+        "manifest": {
+          "name": "Search And Summarize",
+          "version": "1.0",
+          "inputs": [
+            {
+              "name": "question",
+              "trust_type": "Untrusted",
+              "required": true
+            },
+            {
+              "name": "max_results",
+              "trust_type": "Untrusted",
+              "required": true
+            },
+            {
+              "name": "include_sources",
+              "trust_type": "Untrusted",
+              "required": true
+            }
+          ],
+          "skills": [
+            {
+              "skill": "verify",
+              "node": "check"
+            },
+            {
+              "skill": "memory_store",
+              "node": "remember"
+            },
+            {
+              "skill": "web_search",
+              "node": "search"
+            },
+            {
+              "skill": "llm.chat",
+              "node": "summarize"
+            }
+          ],
+          "node_count": 4,
+          "edge_count": 3
+        }
+      }
+    ],
+    "diags": []
+  },
+  "examples/value_types.tac": {
+    "flows": [
+      {
+        "flow_id": "",
+        "name": "Research Digest",
+        "version": "1.0",
+        "language": {
+          "name": "TAC",
+          "language_version": "0.4",
+          "compiler_version": "0.4.0",
+          "ir_version": "1.1"
+        },
+        "nodes": [
+          {
+            "id": "n0",
+            "name": "clean",
+            "skill": "validate",
+            "args": {
+              "arg0": "value"
+            },
+            "pos": {
+              "line": 29,
+              "col": 7
+            }
+          },
+          {
+            "id": "n1",
+            "name": "search",
+            "skill": "web_search",
+            "args": {
+              "arg0": "query",
+              "arg1": "count"
+            },
+            "pos": {
+              "line": 30,
+              "col": 7
+            }
+          },
+          {
+            "id": "n2",
+            "name": "graph",
+            "skill": "graph_search",
+            "args": {
+              "arg0": "query",
+              "arg1": "depth"
+            },
+            "pos": {
+              "line": 31,
+              "col": 7
+            }
+          },
+          {
+            "id": "n3",
+            "name": "draft",
+            "skill": "llm.chat",
+            "args": {
+              "arg0": "prompt"
+            },
+            "pos": {
+              "line": 32,
+              "col": 7
+            }
+          },
+          {
+            "id": "n4",
+            "name": "check",
+            "skill": "verify",
+            "args": {
+              "arg0": "source"
+            },
+            "pos": {
+              "line": 33,
+              "col": 7
+            }
+          },
+          {
+            "id": "n5",
+            "name": "save",
+            "skill": "memory_store",
+            "args": {
+              "arg0": "text",
+              "arg1": "tags",
+              "arg2": "shared"
+            },
+            "pos": {
+              "line": 34,
+              "col": 7
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "n0",
+            "to": "n1"
+          },
+          {
+            "from": "n1",
+            "to": "n2"
+          },
+          {
+            "from": "n2",
+            "to": "n3"
+          },
+          {
+            "from": "n3",
+            "to": "n4"
+          },
+          {
+            "from": "n4",
+            "to": "n5"
+          }
+        ],
+        "triggers": [
+          {
+            "event": "user_message",
+            "targets": [
+              "n0"
+            ]
+          }
+        ],
+        "manifest": {
+          "name": "Research Digest",
+          "version": "1.0",
+          "inputs": [
+            {
+              "name": "question",
+              "trust_type": "Untrusted",
+              "required": true
+            },
+            {
+              "name": "headline",
+              "trust_type": "Untrusted",
+              "required": true
+            },
+            {
+              "name": "max_results",
+              "trust_type": "Untrusted",
+              "required": true
+            },
+            {
+              "name": "min_score",
+              "trust_type": "Untrusted",
+              "required": true
+            },
+            {
+              "name": "include_sources",
+              "trust_type": "Untrusted",
+              "required": true
+            },
+            {
+              "name": "topics",
+              "trust_type": "Untrusted",
+              "required": true
+            },
+            {
+              "name": "options",
+              "trust_type": "Untrusted",
+              "required": true
+            }
+          ],
+          "skills": [
+            {
+              "skill": "verify",
+              "node": "check"
+            },
+            {
+              "skill": "validate",
+              "node": "clean"
+            },
+            {
+              "skill": "llm.chat",
+              "node": "draft"
+            },
+            {
+              "skill": "graph_search",
+              "node": "graph"
+            },
+            {
+              "skill": "memory_store",
+              "node": "save"
+            },
+            {
+              "skill": "web_search",
+              "node": "search"
+            }
+          ],
+          "node_count": 6,
+          "edge_count": 5
+        }
+      }
+    ],
+    "diags": []
+  },
+  "examples/web_qa.tac": {
+    "flows": [
+      {
+        "flow_id": "",
+        "name": "Web Q\u0026A",
+        "version": "1.0",
+        "language": {
+          "name": "TAC",
+          "language_version": "0.4",
+          "compiler_version": "0.4.0",
+          "ir_version": "1.1"
+        },
+        "nodes": [
+          {
+            "id": "n0",
+            "name": "search_web",
+            "skill": "web_search",
+            "args": {
+              "arg0": "query",
+              "arg1": "count"
+            },
+            "pos": {
+              "line": 7,
+              "col": 7
+            }
+          },
+          {
+            "id": "n1",
+            "name": "search_memory",
+            "skill": "memory_search",
+            "args": {
+              "arg0": "query",
+              "arg1": "scope"
+            },
+            "pos": {
+              "line": 8,
+              "col": 7
+            }
+          },
+          {
+            "id": "n2",
+            "name": "search_graph",
+            "skill": "graph_search",
+            "args": {
+              "arg0": "query",
+              "arg1": "depth"
+            },
+            "pos": {
+              "line": 9,
+              "col": 7
+            }
+          },
+          {
+            "id": "n3",
+            "name": "synthesize",
+            "skill": "llm.chat",
+            "args": {
+              "arg0": "prompt",
+              "arg1": "context"
+            },
+            "pos": {
+              "line": 12,
+              "col": 7
+            }
+          },
+          {
+            "id": "n4",
+            "name": "verify",
+            "skill": "verify",
+            "args": {
+              "arg0": "source"
+            },
+            "pos": {
+              "line": 18,
+              "col": 7
+            }
+          },
+          {
+            "id": "n5",
+            "name": "speak",
+            "skill": "",
+            "pos": {
+              "line": 21,
+              "col": 7
+            }
+          },
+          {
+            "id": "n6",
+            "name": "learn",
+            "skill": "",
+            "pos": {
+              "line": 30,
+              "col": 7
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "n0",
+            "to": "n3"
+          },
+          {
+            "from": "n1",
+            "to": "n3"
+          },
+          {
+            "from": "n2",
+            "to": "n3"
+          },
+          {
+            "from": "n3",
+            "to": "n4"
+          },
+          {
+            "from": "n4",
+            "to": "n5"
+          },
+          {
+            "from": "n4",
+            "to": "n6",
+            "condition": {
+              "operator": "\u003e",
+              "left": {
+                "kind": "node_output",
+                "node": "verify",
+                "path": "confidence"
+              },
+              "right": {
+                "kind": "number",
+                "value": 0.9
+              }
+            }
+          }
+        ],
+        "triggers": [
+          {
+            "event": "user_message",
+            "targets": [
+              "n0"
+            ]
+          }
+        ],
+        "manifest": {
+          "name": "Web Q\u0026A",
+          "version": "1.0",
+          "inputs": [
+            {
+              "name": "question",
+              "trust_type": "Untrusted",
+              "required": true
+            }
+          ],
+          "skills": [
+            {
+              "skill": "graph_search",
+              "node": "search_graph"
+            },
+            {
+              "skill": "memory_search",
+              "node": "search_memory"
+            },
+            {
+              "skill": "web_search",
+              "node": "search_web"
+            },
+            {
+              "skill": "llm.chat",
+              "node": "synthesize"
+            },
+            {
+              "skill": "verify",
+              "node": "verify"
+            }
+          ],
+          "node_count": 7,
+          "edge_count": 6
+        }
+      }
+    ],
+    "diags": [
+      {
+        "code": "TAC-GRAPH-003",
+        "severity": "warning",
+        "line": 8,
+        "col": 7,
+        "message": "flow \"Web Q\u0026A\": node \"search_memory\" is unreachable (not started by any trigger or entry)"
+      },
+      {
+        "code": "TAC-GRAPH-003",
+        "severity": "warning",
+        "line": 9,
+        "col": 7,
+        "message": "flow \"Web Q\u0026A\": node \"search_graph\" is unreachable (not started by any trigger or entry)"
+      }
+    ]
+  },
+  "testdata/compat/chained.tac": {
+    "flows": [
+      {
+        "flow_id": "",
+        "name": "Chained",
+        "version": "1.0",
+        "language": {
+          "name": "TAC",
+          "language_version": "0.4",
+          "compiler_version": "0.4.0",
+          "ir_version": "1.1"
+        },
+        "nodes": [
+          {
+            "id": "n0",
+            "name": "fetch",
+            "skill": "web_search",
+            "args": {
+              "arg0": "query"
+            },
+            "pos": {
+              "line": 5,
+              "col": 7
+            }
+          },
+          {
+            "id": "n1",
+            "name": "rank",
+            "skill": "llm.classify",
+            "args": {
+              "arg0": "text"
+            },
+            "pos": {
+              "line": 6,
+              "col": 7
+            }
+          },
+          {
+            "id": "n2",
+            "name": "store",
+            "skill": "memory_search",
+            "args": {
+              "arg0": "query"
+            },
+            "pos": {
+              "line": 7,
+              "col": 7
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "n0",
+            "to": "n1"
+          }
+        ],
+        "triggers": [
+          {
+            "event": "user_message",
+            "targets": [
+              "n0"
+            ]
+          }
+        ],
+        "manifest": {
+          "name": "Chained",
+          "version": "1.0",
+          "inputs": [
+            {
+              "name": "q",
+              "trust_type": "Untrusted",
+              "required": true
+            }
+          ],
+          "skills": [
+            {
+              "skill": "web_search",
+              "node": "fetch"
+            },
+            {
+              "skill": "llm.classify",
+              "node": "rank"
+            },
+            {
+              "skill": "memory_search",
+              "node": "store"
+            }
+          ],
+          "node_count": 3,
+          "edge_count": 1
+        }
+      }
+    ],
+    "diags": [
+      {
+        "code": "TAC-GRAPH-003",
+        "severity": "warning",
+        "line": 7,
+        "col": 7,
+        "message": "flow \"Chained\": node \"store\" is unreachable (not started by any trigger or entry)"
+      }
+    ]
+  },
+  "testdata/compat/else_target.tac": {
+    "flows": [
+      {
+        "flow_id": "",
+        "name": "Else Target",
+        "version": "1.0",
+        "language": {
+          "name": "TAC",
+          "language_version": "0.4",
+          "compiler_version": "0.4.0",
+          "ir_version": "1.1"
+        },
+        "nodes": [
+          {
+            "id": "n0",
+            "name": "check",
+            "skill": "web_search",
+            "args": {
+              "arg0": "query"
+            },
+            "pos": {
+              "line": 4,
+              "col": 7
+            }
+          },
+          {
+            "id": "n1",
+            "name": "proceed",
+            "skill": "memory_search",
+            "args": {
+              "arg0": "query"
+            },
+            "pos": {
+              "line": 5,
+              "col": 7
+            }
+          },
+          {
+            "id": "n2",
+            "name": "fallback",
+            "skill": "memory_search",
+            "args": {
+              "arg0": "query"
+            },
+            "pos": {
+              "line": 6,
+              "col": 7
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "n0",
+            "to": "n1",
+            "condition": {
+              "operator": "\u003e",
+              "left": {
+                "kind": "node_output",
+                "node": "check",
+                "path": "confidence"
+              },
+              "right": {
+                "kind": "number",
+                "value": 0.5
+              }
+            },
+            "fallback": "n2"
+          }
+        ],
+        "triggers": [
+          {
+            "event": "tick",
+            "targets": [
+              "n0"
+            ]
+          }
+        ],
+        "manifest": {
+          "name": "Else Target",
+          "version": "1.0",
+          "skills": [
+            {
+              "skill": "web_search",
+              "node": "check"
+            },
+            {
+              "skill": "memory_search",
+              "node": "fallback"
+            },
+            {
+              "skill": "memory_search",
+              "node": "proceed"
+            }
+          ],
+          "node_count": 3,
+          "edge_count": 1
+        }
+      }
+    ],
+    "diags": [
+      {
+        "code": "TAC-GRAPH-003",
+        "severity": "warning",
+        "line": 6,
+        "col": 7,
+        "message": "flow \"Else Target\": node \"fallback\" is unreachable (not started by any trigger or entry)"
+      }
+    ]
+  },
+  "testdata/compat/keywords.tac": {
+    "flows": [
+      {
+        "flow_id": "",
+        "name": "Keywords",
+        "version": "1.0",
+        "language": {
+          "name": "TAC",
+          "language_version": "0.4",
+          "compiler_version": "0.4.0",
+          "ir_version": "1.1"
+        },
+        "nodes": [
+          {
+            "id": "n0",
+            "name": "schedule",
+            "skill": "web_search",
+            "args": {
+              "arg0": "query"
+            },
+            "pos": {
+              "line": 5,
+              "col": 7
+            }
+          },
+          {
+            "id": "n1",
+            "name": "task",
+            "skill": "web_search",
+            "args": {
+              "arg0": "query"
+            },
+            "pos": {
+              "line": 6,
+              "col": 7
+            }
+          },
+          {
+            "id": "n2",
+            "name": "model",
+            "skill": "web_search",
+            "args": {
+              "arg0": "query"
+            },
+            "pos": {
+              "line": 7,
+              "col": 7
+            }
+          },
+          {
+            "id": "n3",
+            "name": "episode",
+            "skill": "web_search",
+            "args": {
+              "arg0": "query"
+            },
+            "pos": {
+              "line": 8,
+              "col": 7
+            }
+          },
+          {
+            "id": "n4",
+            "name": "dataset",
+            "skill": "web_search",
+            "args": {
+              "arg0": "query"
+            },
+            "pos": {
+              "line": 9,
+              "col": 7
+            }
+          },
+          {
+            "id": "n5",
+            "name": "requires",
+            "skill": "web_search",
+            "args": {
+              "arg0": "query"
+            },
+            "pos": {
+              "line": 10,
+              "col": 7
+            }
+          },
+          {
+            "id": "n6",
+            "name": "question",
+            "skill": "web_search",
+            "args": {
+              "arg0": "query"
+            },
+            "pos": {
+              "line": 11,
+              "col": 7
+            }
+          },
+          {
+            "id": "n7",
+            "name": "target",
+            "skill": "web_search",
+            "args": {
+              "arg0": "query"
+            },
+            "pos": {
+              "line": 12,
+              "col": 7
+            }
+          },
+          {
+            "id": "n8",
+            "name": "tz",
+            "skill": "memory_search",
+            "args": {
+              "arg0": "query"
+            },
+            "pos": {
+              "line": 13,
+              "col": 7
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "n0",
+            "to": "n1"
+          },
+          {
+            "from": "n1",
+            "to": "n2"
+          },
+          {
+            "from": "n2",
+            "to": "n3"
+          },
+          {
+            "from": "n3",
+            "to": "n4"
+          },
+          {
+            "from": "n4",
+            "to": "n5"
+          },
+          {
+            "from": "n5",
+            "to": "n6"
+          },
+          {
+            "from": "n6",
+            "to": "n7"
+          },
+          {
+            "from": "n7",
+            "to": "n8"
+          }
+        ],
+        "triggers": [
+          {
+            "event": "go",
+            "targets": [
+              "n0"
+            ]
+          }
+        ],
+        "manifest": {
+          "name": "Keywords",
+          "version": "1.0",
+          "skills": [
+            {
+              "skill": "web_search",
+              "node": "dataset"
+            },
+            {
+              "skill": "web_search",
+              "node": "episode"
+            },
+            {
+              "skill": "web_search",
+              "node": "model"
+            },
+            {
+              "skill": "web_search",
+              "node": "question"
+            },
+            {
+              "skill": "web_search",
+              "node": "requires"
+            },
+            {
+              "skill": "web_search",
+              "node": "schedule"
+            },
+            {
+              "skill": "web_search",
+              "node": "target"
+            },
+            {
+              "skill": "web_search",
+              "node": "task"
+            },
+            {
+              "skill": "memory_search",
+              "node": "tz"
+            }
+          ],
+          "node_count": 9,
+          "edge_count": 8
+        }
+      }
+    ],
+    "diags": []
+  }
+}

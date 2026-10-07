@@ -1,0 +1,130 @@
+{
+  "flows": [
+    {
+      "flow_id": "",
+      "name": "estoque_evento",
+      "version": "1.0",
+      "language": {
+        "name": "TAC",
+        "language_version": "0.5",
+        "compiler_version": "0.5.0",
+        "ir_version": "1.2"
+      },
+      "requires": "0.5",
+      "nodes": [
+        {
+          "id": "n0",
+          "name": "gate",
+          "skill": "laya.decide",
+          "args": {
+            "input": {
+              "ref": "payload"
+            },
+            "min_confidence": 0.8,
+            "task": "acao"
+          },
+          "pos": {
+            "line": 7,
+            "col": 7
+          }
+        },
+        {
+          "id": "n1",
+          "name": "fetch",
+          "skill": "web_search",
+          "args": {
+            "query": {
+              "ref": "payload"
+            }
+          },
+          "pos": {
+            "line": 8,
+            "col": 7
+          }
+        },
+        {
+          "id": "n2",
+          "name": "use_cache",
+          "skill": "memory_search",
+          "args": {
+            "query": {
+              "ref": "payload"
+            }
+          },
+          "pos": {
+            "line": 9,
+            "col": 7
+          }
+        },
+        {
+          "id": "n3",
+          "name": "ask_human",
+          "skill": "agent_task",
+          "args": {
+            "agent": "humano",
+            "payload": {
+              "ref": "payload"
+            }
+          },
+          "pos": {
+            "line": 10,
+            "col": 7
+          }
+        }
+      ],
+      "edges": [
+        {
+          "from": "n0",
+          "to": "n1",
+          "label": "proceed"
+        },
+        {
+          "from": "n0",
+          "to": "n2",
+          "label": "reuse"
+        },
+        {
+          "from": "n0",
+          "to": "n3",
+          "label": "*"
+        }
+      ],
+      "triggers": [
+        {
+          "event": "estoque.baixo",
+          "targets": [
+            "n0"
+          ]
+        }
+      ],
+      "manifest": {
+        "name": "estoque_evento",
+        "version": "1.0",
+        "skills": [
+          {
+            "skill": "agent_task",
+            "node": "ask_human"
+          },
+          {
+            "skill": "web_search",
+            "node": "fetch"
+          },
+          {
+            "skill": "laya.decide",
+            "node": "gate"
+          },
+          {
+            "skill": "memory_search",
+            "node": "use_cache"
+          }
+        ],
+        "node_count": 4,
+        "edge_count": 3
+      }
+    }
+  ],
+  "tasks": [],
+  "models": [],
+  "episodes": [],
+  "datasets": []
+}

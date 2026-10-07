@@ -1,0 +1,23 @@
+{
+  "only": "",
+  "ok_upstream": true,
+  "ok_dialect": true,
+  "codes_upstream": [
+    "TAC-VER-001"
+  ],
+  "codes_dialect": [
+    "TAC-VER-001"
+  ],
+  "shape": {
+    "flows": [],
+    "tasks": [],
+    "models": [
+      {
+        "name": "m",
+        "tasks": []
+      }
+    ],
+    "episodes": [],
+    "datasets": []
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "only": "",
+  "ok_upstream": false,
+  "ok_dialect": false,
+  "codes_upstream": [
+    "TAC-LAYA-012"
+  ],
+  "codes_dialect": [
+    "TAC-LAYA-012"
+  ],
+  "shape": null
+}

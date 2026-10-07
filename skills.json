@@ -3,7 +3,10 @@
     "name": "sentiment_analyzer",
     "version": "1.0",
     "return_type": "Hallucinable",
-    "args": ["text", "model"],
+    "args": [
+      "text",
+      "model"
+    ],
     "arg_types": {},
     "description": "Analyze sentiment of input text with confidence score",
     "runtime": "python",
@@ -13,8 +16,14 @@
     "signature": "MEUCIQD...",
     "input_schema": "{\"type\":\"object\",\"properties\":{\"text\":{\"type\":\"string\"}}}",
     "output_schema": "{\"type\":\"object\",\"properties\":{\"sentiment\":{\"type\":\"string\"},\"confidence\":{\"type\":\"number\"}}}",
-    "capabilities": ["nlp", "classification"],
-    "permissions": {"network": "none", "filesystem": "read-only"},
+    "capabilities": [
+      "nlp",
+      "classification"
+    ],
+    "permissions": {
+      "network": "none",
+      "filesystem": "read-only"
+    },
     "execution": {
       "timeout_seconds": 30,
       "memory_mb": 256,
@@ -28,7 +37,10 @@
     "name": "pdf_extractor",
     "version": "2.1",
     "return_type": "Fact",
-    "args": ["file_path", "pages"],
+    "args": [
+      "file_path",
+      "pages"
+    ],
     "arg_types": {},
     "description": "Extract structured text and tables from PDF documents",
     "runtime": "python",
@@ -38,8 +50,14 @@
     "signature": "MEQCIQD...",
     "input_schema": "{\"type\":\"object\",\"properties\":{\"file_path\":{\"type\":\"string\"},\"pages\":{\"type\":\"array\",\"items\":{\"type\":\"integer\"}}}}",
     "output_schema": "{\"type\":\"object\",\"properties\":{\"text\":{\"type\":\"string\"},\"tables\":{\"type\":\"array\"}}}",
-    "capabilities": ["document", "extraction"],
-    "permissions": {"network": "none", "filesystem": "read"},
+    "capabilities": [
+      "document",
+      "extraction"
+    ],
+    "permissions": {
+      "network": "none",
+      "filesystem": "read"
+    },
     "execution": {
       "timeout_seconds": 120,
       "memory_mb": 512,
@@ -48,5 +66,168 @@
       "idempotent": true,
       "cancellable": true
     }
+  },
+  {
+    "name": "laya.decide",
+    "version": "1.0",
+    "return_type": "Hallucinable",
+    "args": [
+      "task",
+      "input",
+      "min_confidence",
+      "question",
+      "allow_uncalibrated"
+    ],
+    "arg_types": {},
+    "description": "Ask a LAYA model a task's question; with labelled edges the node is a gate",
+    "runtime": "go"
+  },
+  {
+    "name": "laya.classify",
+    "version": "1.0",
+    "return_type": "Hallucinable",
+    "args": [
+      "task",
+      "input"
+    ],
+    "arg_types": {},
+    "description": "Answer every question of a LAYA task",
+    "runtime": "go"
+  },
+  {
+    "name": "laya.normalize",
+    "version": "1.0",
+    "return_type": "Hallucinable",
+    "args": [
+      "input",
+      "task",
+      "content_type"
+    ],
+    "arg_types": {},
+    "description": "Turn raw input into a LAYA episode",
+    "runtime": "go"
+  },
+  {
+    "name": "laya.episode.record",
+    "version": "1.0",
+    "return_type": "Fact",
+    "args": [
+      "from",
+      "episode",
+      "target",
+      "task"
+    ],
+    "arg_types": {},
+    "description": "Store a LAYA episode (optionally with targets)",
+    "runtime": "go"
+  },
+  {
+    "name": "laya.dataset.export",
+    "version": "1.0",
+    "return_type": "Fact",
+    "args": [
+      "task",
+      "dataset",
+      "exclude_inferred",
+      "exclude_fixed_test"
+    ],
+    "arg_types": {},
+    "description": "Export a training dataset (JSONL) of a task or a declared dataset",
+    "runtime": "go"
+  },
+  {
+    "name": "laya.train",
+    "version": "1.0",
+    "return_type": "Fact",
+    "args": [
+      "model",
+      "dataset",
+      "run"
+    ],
+    "arg_types": {},
+    "description": "Start training a private LAYA model (asynchronous)",
+    "runtime": "go"
+  },
+  {
+    "name": "laya.eval",
+    "version": "1.0",
+    "return_type": "Fact",
+    "args": [
+      "model",
+      "run",
+      "test"
+    ],
+    "arg_types": {},
+    "description": "Evaluate a run against the current model and the base",
+    "runtime": "go"
+  },
+  {
+    "name": "laya.model.create",
+    "version": "1.0",
+    "return_type": "Fact",
+    "args": [
+      "name",
+      "tasks",
+      "base"
+    ],
+    "arg_types": {},
+    "description": "Declare a private LAYA model",
+    "runtime": "go"
+  },
+  {
+    "name": "laya.model.status",
+    "version": "1.0",
+    "return_type": "Fact",
+    "args": [
+      "model"
+    ],
+    "arg_types": {},
+    "description": "Serving run, previous run, port, memory and job of a model",
+    "runtime": "go"
+  },
+  {
+    "name": "laya.model.promote",
+    "version": "1.0",
+    "return_type": "Fact",
+    "args": [
+      "model",
+      "run",
+      "if_better",
+      "max_drop_pp"
+    ],
+    "arg_types": {},
+    "description": "Serve a run (optionally only if it is better)",
+    "runtime": "go"
+  },
+  {
+    "name": "laya.model.rollback",
+    "version": "1.0",
+    "return_type": "Fact",
+    "args": [
+      "model"
+    ],
+    "arg_types": {},
+    "description": "Serve the previous run again",
+    "runtime": "go"
+  },
+  {
+    "name": "laya.tasks.list",
+    "version": "1.0",
+    "return_type": "Fact",
+    "args": [],
+    "arg_types": {},
+    "description": "List the registered LAYA tasks",
+    "runtime": "go"
+  },
+  {
+    "name": "laya.tasks.describe",
+    "version": "1.0",
+    "return_type": "Fact",
+    "args": [
+      "task"
+    ],
+    "arg_types": {},
+    "description": "Questions, labels, counts and model of a task",
+    "runtime": "go"
   }
 ]

@@ -1,0 +1,49 @@
+{
+  "only": "",
+  "ok_upstream": true,
+  "ok_dialect": true,
+  "codes_upstream": [],
+  "codes_dialect": [],
+  "shape": {
+    "flows": [
+      {
+        "name": "normalizar",
+        "nodes": [
+          {
+            "name": "n",
+            "skill": "laya.normalize",
+            "args": {
+              "content_type": "text/csv",
+              "input": {
+                "ref": "payload"
+              },
+              "task": "acao"
+            }
+          },
+          {
+            "name": "r",
+            "skill": "laya.episode.record",
+            "args": {
+              "episode": {
+                "ref": "n.episode"
+              },
+              "task": "acao"
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "n",
+            "to": "r"
+          }
+        ],
+        "triggers": [],
+        "schedules": []
+      }
+    ],
+    "tasks": [],
+    "models": [],
+    "episodes": [],
+    "datasets": []
+  }
+}

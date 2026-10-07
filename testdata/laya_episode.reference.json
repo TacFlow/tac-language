@@ -1,0 +1,27 @@
+{
+  "id": "evt-c1-estoque-0007-a",
+  "group_id": "conv-estoque-reposicao-2026-10",
+  "state": {
+    "goal": "decidir se reabastece o SKU antes do próximo ciclo de compra",
+    "context": {
+      "sku": "REF-2L-COLA", "estoque_atual": 2, "ponto_reposicao": 10,
+      "consumo_medio_dia": 6, "lead_time_dias": 3, "validade_dias": 180,
+      "pedido_em_aberto": false
+    },
+    "regra_declarada": "reabastecer SE estoque_atual < ponto_reposicao E pedido_em_aberto == false",
+    "tool": "estoque.consultar_sku",
+    "cache_available": false,
+    "fresh_result_required": true
+  },
+  "questions": [{
+    "id": "acao", "type": "choice",
+    "instructions": "Qual ação o agente deve tomar neste passo?",
+    "options": [
+      { "label": "proceed", "description": "executar o passo agora (dado ausente/obsoleto)" },
+      { "label": "reuse",   "description": "usar resultado em cache válido" },
+      { "label": "skip",    "description": "passo provadamente desnecessário" },
+      { "label": "ask",     "description": "ambíguo, faltam dados ou risco/custo sem justificação" }
+    ]
+  }],
+  "targets": { "acao": "proceed" }
+}

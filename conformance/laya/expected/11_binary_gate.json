@@ -1,0 +1,84 @@
+{
+  "only": "",
+  "ok_upstream": true,
+  "ok_dialect": true,
+  "codes_upstream": [],
+  "codes_dialect": [],
+  "shape": {
+    "flows": [
+      {
+        "name": "binary_gate",
+        "nodes": [
+          {
+            "name": "gate",
+            "skill": "laya.decide",
+            "args": {
+              "allow_uncalibrated": true,
+              "input": {
+                "ref": "payload"
+              },
+              "task": "repor"
+            }
+          },
+          {
+            "name": "sim",
+            "skill": "laya.train",
+            "args": {
+              "dataset": "acao_v1",
+              "model": "estoque"
+            }
+          },
+          {
+            "name": "nao",
+            "skill": "laya.tasks.list",
+            "args": {}
+          }
+        ],
+        "edges": [
+          {
+            "from": "gate",
+            "to": "sim",
+            "label": "true"
+          },
+          {
+            "from": "gate",
+            "to": "nao",
+            "label": "false"
+          },
+          {
+            "from": "gate",
+            "to": "nao",
+            "label": "*"
+          }
+        ],
+        "triggers": [],
+        "schedules": []
+      }
+    ],
+    "tasks": [
+      {
+        "name": "repor",
+        "questions": [
+          {
+            "id": "repor",
+            "type": "binary",
+            "instructions": "Repor agora?",
+            "options": [
+              {
+                "label": "nao",
+                "description": "não repor"
+              },
+              {
+                "label": "sim",
+                "description": "repor"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "models": [],
+    "episodes": [],
+    "datasets": []
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "flows": [
+    {
+      "flow_id": "",
+      "name": "normalizar",
+      "version": "1.0",
+      "language": {
+        "name": "TAC",
+        "language_version": "0.5",
+        "compiler_version": "0.5.0",
+        "ir_version": "1.2"
+      },
+      "requires": "0.5",
+      "nodes": [
+        {
+          "id": "n0",
+          "name": "n",
+          "skill": "laya.normalize",
+          "args": {
+            "input": {
+              "ref": "payload"
+            },
+            "task": "acao"
+          },
+          "pos": {
+            "line": 3,
+            "col": 7
+          }
+        },
+        {
+          "id": "n1",
+          "name": "r",
+          "skill": "laya.episode.record",
+          "args": {
+            "episode": {
+              "ref": "n.episode"
+            }
+          },
+          "pos": {
+            "line": 4,
+            "col": 7
+          }
+        }
+      ],
+      "edges": [
+        {
+          "from": "n0",
+          "to": "n1"
+        }
+      ],
+      "manifest": {
+        "name": "normalizar",
+        "version": "1.0",
+        "skills": [
+          {
+            "skill": "laya.normalize",
+            "node": "n"
+          },
+          {
+            "skill": "laya.episode.record",
+            "node": "r"
+          }
+        ],
+        "node_count": 2,
+        "edge_count": 1
+      }
+    }
+  ],
+  "tasks": [],
+  "models": [],
+  "episodes": [],
+  "datasets": []
+}

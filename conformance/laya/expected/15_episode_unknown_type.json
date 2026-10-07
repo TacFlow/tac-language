@@ -1,0 +1,33 @@
+{
+  "only": "",
+  "ok_upstream": true,
+  "ok_dialect": true,
+  "codes_upstream": [
+    "TAC-LAYA-008"
+  ],
+  "codes_dialect": [
+    "TAC-LAYA-008"
+  ],
+  "shape": {
+    "flows": [],
+    "tasks": [],
+    "models": [],
+    "episodes": [
+      {
+        "id": "ep-unknown-type",
+        "group_id": "conformance",
+        "state": {
+          "goal": "um tipo de pergunta novo"
+        },
+        "questions": [
+          {
+            "id": "humor",
+            "type": "vibe",
+            "instructions": "Como está o cliente?"
+          }
+        ]
+      }
+    ],
+    "datasets": []
+  }
+}

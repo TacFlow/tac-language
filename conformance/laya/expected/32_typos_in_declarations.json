@@ -1,0 +1,69 @@
+{
+  "only": "",
+  "ok_upstream": true,
+  "ok_dialect": true,
+  "codes_upstream": [
+    "TAC-PARSE-001",
+    "TAC-PARSE-001",
+    "TAC-PARSE-001",
+    "TAC-PARSE-001"
+  ],
+  "codes_dialect": [
+    "TAC-PARSE-001",
+    "TAC-PARSE-001",
+    "TAC-PARSE-001",
+    "TAC-PARSE-001"
+  ],
+  "shape": {
+    "flows": [],
+    "tasks": [
+      {
+        "name": "acao",
+        "questions": [
+          {
+            "id": "acao",
+            "type": "choice",
+            "instructions": "Qual ação?",
+            "options": [
+              {
+                "label": "proceed",
+                "description": "agir"
+              },
+              {
+                "label": "ask",
+                "description": "perguntar"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "models": [],
+    "episodes": [
+      {
+        "id": "ep-typos",
+        "group_id": "conformance",
+        "state": {
+          "goal": "erros de escrita são reportados, nunca reinterpretados",
+          "limite": 1e3
+        },
+        "questions": [
+          {
+            "id": "repor",
+            "type": "binary",
+            "instructions": "Repor?"
+          }
+        ],
+        "targets": {
+          "repor": false
+        }
+      }
+    ],
+    "datasets": [
+      {
+        "name": "ds-typos",
+        "task": "acao"
+      }
+    ]
+  }
+}

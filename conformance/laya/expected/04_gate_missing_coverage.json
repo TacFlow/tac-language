@@ -1,0 +1,102 @@
+{
+  "only": "",
+  "ok_upstream": true,
+  "ok_dialect": true,
+  "codes_upstream": [
+    "TAC-LAYA-003"
+  ],
+  "codes_dialect": [
+    "TAC-LAYA-003"
+  ],
+  "shape": {
+    "flows": [
+      {
+        "name": "gate_missing_coverage",
+        "nodes": [
+          {
+            "name": "gate",
+            "skill": "laya.decide",
+            "args": {
+              "input": {
+                "ref": "payload"
+              },
+              "min_confidence": 0.8,
+              "task": "acao"
+            }
+          },
+          {
+            "name": "a",
+            "skill": "laya.tasks.list",
+            "args": {}
+          },
+          {
+            "name": "b",
+            "skill": "laya.tasks.describe",
+            "args": {
+              "task": "acao"
+            }
+          },
+          {
+            "name": "c",
+            "skill": "laya.model.status",
+            "args": {
+              "model": "estoque"
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "gate",
+            "to": "a",
+            "label": "proceed"
+          },
+          {
+            "from": "gate",
+            "to": "b",
+            "label": "reuse"
+          },
+          {
+            "from": "gate",
+            "to": "c",
+            "label": "ask"
+          }
+        ],
+        "triggers": [],
+        "schedules": []
+      }
+    ],
+    "tasks": [
+      {
+        "name": "acao",
+        "questions": [
+          {
+            "id": "acao",
+            "type": "choice",
+            "instructions": "Qual ação o agente deve tomar neste passo?",
+            "options": [
+              {
+                "label": "proceed",
+                "description": "executar o passo agora"
+              },
+              {
+                "label": "reuse",
+                "description": "usar resultado em cache válido"
+              },
+              {
+                "label": "skip",
+                "description": "passo desnecessário"
+              },
+              {
+                "label": "ask",
+                "description": "ambíguo"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "models": [],
+    "episodes": [],
+    "datasets": []
+  }
+}

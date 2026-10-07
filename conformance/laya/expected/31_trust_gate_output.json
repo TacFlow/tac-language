@@ -1,0 +1,10 @@
+{
+  "only": "upstream",
+  "ok_upstream": false,
+  "ok_dialect": false,
+  "codes_upstream": [
+    "TAC-TRUST-001"
+  ],
+  "codes_dialect": [],
+  "shape": null
+}

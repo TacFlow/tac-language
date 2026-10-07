@@ -1,0 +1,12 @@
+{
+  "only": "",
+  "ok_upstream": false,
+  "ok_dialect": false,
+  "codes_upstream": [
+    "TAC-SCHED-001"
+  ],
+  "codes_dialect": [
+    "TAC-SCHED-001"
+  ],
+  "shape": null
+}

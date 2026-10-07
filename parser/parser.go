@@ -26,11 +26,32 @@ import (
 	"github.com/TacFlow/tac-language/lexer"
 )
 
+// MaxDepth is how deeply values (`[`, `{`) and statement blocks may nest.
+// Parsing recurses per level; past the limit the source is a parse error
+// instead of a stack overflow no caller can recover from.
+const MaxDepth = 512
+
 // Parser converts a token stream into an AST.
 type Parser struct {
 	tokens []lexer.Token
 	pos    int
+	depth  int   // current nesting of values and blocks
+	err    error // set once MaxDepth is exceeded; parsing then stops
 }
+
+// enter opens one nesting level. Past MaxDepth it records the parse error
+// and returns false; from then on peek reports EOF, so every loop ends and
+// Parse returns the error.
+func (p *Parser) enter() bool {
+	p.depth++
+	if p.depth > MaxDepth && p.err == nil {
+		tok := p.peek()
+		p.err = fmt.Errorf("line %d, col %d: values and blocks nest more than %d levels deep", tok.Line, tok.Col, MaxDepth)
+	}
+	return p.err == nil
+}
+
+func (p *Parser) leave() { p.depth-- }
 
 // New creates a new Parser for the given token stream.
 func New(tokens []lexer.Token) *Parser {
@@ -51,7 +72,7 @@ func (p *Parser) posAt() ast.Position {
 }
 
 func (p *Parser) peek() lexer.Token {
-	if p.pos >= len(p.tokens) {
+	if p.pos >= len(p.tokens) || p.err != nil {
 		return lexer.Token{Type: lexer.EOF}
 	}
 	return p.tokens[p.pos]
@@ -131,6 +152,10 @@ func (p *Parser) parseObjectLiteral() *ast.Node {
 	tok := p.advance() // {
 	n := ast.NewNode(ast.NodeObjectLiteral, tok.Line, tok.Col)
 	n.MapVal = make(map[string]*ast.Node)
+	defer p.leave()
+	if !p.enter() {
+		return n
+	}
 	p.skipNewlines()
 	for p.peek().Type != lexer.RBrace && p.peek().Type != lexer.EOF {
 		keyTok := p.peek()
@@ -163,12 +188,20 @@ func (p *Parser) parseArrayLiteral() *ast.Node {
 	tok := p.advance() // [
 	n := ast.NewNode(ast.NodeArrayLiteral, tok.Line, tok.Col)
 	n.ArrVal = make([]*ast.Node, 0)
+	defer p.leave()
+	if !p.enter() {
+		return n
+	}
 	p.skipNewlines()
 	for p.peek().Type != lexer.RBrack && p.peek().Type != lexer.EOF {
 		val := p.parseValue()
-		if val != nil {
-			n.ArrVal = append(n.ArrVal, val)
+		if val == nil {
+			// Bug d (v0.4.0): parseValue consumed nothing for this token, so
+			// looping back would repeat the same state forever. Stop here and
+			// leave the token to the enclosing construct.
+			break
 		}
+		n.ArrVal = append(n.ArrVal, val)
 		p.skipNewlines()
 		if p.peek().Type == lexer.Comma {
 			p.advance()
@@ -461,6 +494,10 @@ func (p *Parser) parseBlock() []*ast.Node {
 		return nodes
 	}
 	p.advance() // {
+	defer p.leave()
+	if !p.enter() {
+		return nodes
+	}
 	p.skipNewlines()
 
 	// Track brace depth for nested blocks
@@ -624,39 +661,38 @@ func (p *Parser) parseFlowBody() (*ast.Node, error) {
 		case tok.Type == lexer.Ident && tok.Value == "recall":
 			flow.Children = append(flow.Children, p.parseRecallStmt())
 
+		case tok.Type == lexer.Ident && tok.Value == "schedule" && p.pos+1 < len(p.tokens) && p.tokens[p.pos+1].Type == lexer.String:
+			// Only `schedule "<cron>"`: a v0.4 node named schedule
+			// (`schedule -> b`) is still an edge.
+			flow.Children = append(flow.Children, p.parseSchedule())
+
 		case tok.Type == lexer.Newline || tok.Type == lexer.Comment:
 			p.advance()
 			continue
 
 		case tok.Type == lexer.Ident:
-			// Could be an edge or an inline statement
-			name := tok.Value
+			// An edge (`a -> b`, `gate[branch] -> b`) or a form the parser does
+			// not recognise. v0.4 skipped the latter in silence; v0.5 records it
+			// (TAC-PARSE-001) so a newer construct never vanishes unnoticed.
+			start := p.pos
 			p.advance()
 			p.skipNewlines()
-			if p.peek().Type == lexer.Arrow {
-				e := ast.NewNode(ast.NodeEdge, tok.Line, tok.Col)
-				src := ast.NewNode(ast.NodeIdentifier, tok.Line, tok.Col)
-				src.Value = name
-				e.Children = append(e.Children, src)
-
-				p.advance() // ->
-				p.skipNewlines()
-
-				if p.peek().Type == lexer.LBrack {
-					e.Children = append(e.Children, p.parseArrayLiteral())
-				} else if p.peek().Type == lexer.Ident {
-					e.Children = append(e.Children, p.parseIdent())
+			switch p.peek().Type {
+			case lexer.Arrow:
+				flow.Edges = append(flow.Edges, p.parseEdgeChain(tok)...)
+			case lexer.LBrack:
+				edges, bad := p.parseLabelledEdge(tok)
+				flow.Edges = append(flow.Edges, edges...)
+				if bad != nil {
+					flow.Children = append(flow.Children, bad)
 				}
-
-				if p.peek().Type == lexer.LBrace {
-					e.Attrs = p.parseNamedArgs()
-				}
-				flow.Edges = append(flow.Edges, e)
+			default:
+				p.pos = start
+				flow.Children = append(flow.Children, p.skipUnrecognized(p.flowItemStart))
 			}
 
 		default:
-			// Skip unrecognized token
-			p.advance()
+			flow.Children = append(flow.Children, p.skipUnrecognized(p.flowItemStart))
 		}
 
 		p.skipNewlines()
@@ -667,6 +703,56 @@ func (p *Parser) parseFlowBody() (*ast.Node, error) {
 	}
 
 	return flow, nil
+}
+
+// parseEdgeChain parses `src -> tgt [ { attrs } ] [ -> tgt2 ... ]` once the
+// source identifier srcTok has been consumed and an Arrow is current. Every
+// hop of a chain becomes its own Edge (bug b, v0.4.0: only the first hop was
+// kept). A chain continues only after an identifier target.
+func (p *Parser) parseEdgeChain(srcTok lexer.Token) []*ast.Node {
+	return p.parseEdgeChainLabelled(srcTok, nil)
+}
+
+// parseEdgeChainLabelled is parseEdgeChain whose FIRST hop carries a gate
+// branch (`gate[branch] -> x`); later hops of the chain are plain edges.
+func (p *Parser) parseEdgeChainLabelled(srcTok lexer.Token, label *ast.Node) []*ast.Node {
+	var edges []*ast.Node
+	for {
+		e := ast.NewNode(ast.NodeEdge, srcTok.Line, srcTok.Col)
+		src := ast.NewNode(ast.NodeIdentifier, srcTok.Line, srcTok.Col)
+		src.Value = srcTok.Value
+		e.Children = append(e.Children, src)
+
+		p.advance() // ->
+		p.skipNewlines()
+
+		var tgtTok lexer.Token
+		isIdent := false
+		if p.peek().Type == lexer.LBrack {
+			e.Children = append(e.Children, p.parseArrayLiteral())
+		} else if p.peek().Type == lexer.Ident {
+			tgtTok = p.peek()
+			isIdent = true
+			e.Children = append(e.Children, p.parseIdent())
+		}
+
+		if p.peek().Type == lexer.LBrace {
+			e.Attrs = p.parseNamedArgs()
+		}
+		if label != nil {
+			if e.Attrs == nil {
+				e.Attrs = make(map[string]*ast.Node)
+			}
+			e.Attrs[ast.LabelAttr] = label
+			label = nil
+		}
+		edges = append(edges, e)
+
+		if !isIdent || p.peek().Type != lexer.Arrow {
+			return edges
+		}
+		srcTok = tgtTok
+	}
 }
 
 // --- Top-Level Parsing ---
@@ -683,6 +769,9 @@ func (p *Parser) Parse() (*ast.Node, error) {
 		switch {
 		case tok.Type == lexer.Newline || tok.Type == lexer.Comment:
 			p.advance()
+
+		case p.isDeclStart():
+			program.Nodes = append(program.Nodes, p.parseDecl())
 
 		case tok.Type == lexer.Ident && tok.Value == "flow":
 			p.advance()
@@ -728,7 +817,8 @@ func (p *Parser) Parse() (*ast.Node, error) {
 					case p.peek().Type == lexer.Ident && p.peek().Value == "recall":
 						ctx.Children = append(ctx.Children, p.parseRecallStmt())
 					default:
-						p.advance()
+						// v0.5: recorded (TAC-PARSE-001) instead of skipped.
+						ctx.Children = append(ctx.Children, p.skipUnrecognized(p.contextItemStart))
 					}
 					p.skipNewlines()
 				}
@@ -781,13 +871,17 @@ func (p *Parser) Parse() (*ast.Node, error) {
 			program.Nodes = append(program.Nodes, as)
 
 		default:
-			// Skip unrecognized top-level tokens
-			p.advance()
+			// v0.4 skipped unrecognised top-level tokens in silence; v0.5
+			// records the form (TAC-PARSE-001).
+			program.Nodes = append(program.Nodes, p.skipUnrecognized(p.topItemStart))
 		}
 
 		p.skipNewlines()
 	}
 
+	if p.err != nil {
+		return nil, p.err
+	}
 	return program, nil
 }
 
@@ -810,5 +904,16 @@ func ParseSource(source string) (*ast.Node, error) {
 		return nil, fmt.Errorf("tokenization errors: %v", errs)
 	}
 	p := New(tokens)
-	return p.Parse()
+	program, err := p.Parse()
+	if err != nil || program == nil {
+		return program, err
+	}
+	// v0.5: numbers glued to identifier text (`3x`) are kept as v0.4 read
+	// them and recorded for the analyzer (TAC-PARSE-001).
+	for _, g := range l.Glued() {
+		n := ast.NewNode(ast.NodeGluedNumber, g.Line, g.Col)
+		n.Value = g.Number + g.Rest
+		program.Nodes = append(program.Nodes, n)
+	}
+	return program, nil
 }

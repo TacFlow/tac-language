@@ -1,0 +1,161 @@
+{
+  "flows": [
+    {
+      "flow_id": "",
+      "name": "estoque_treino",
+      "version": "1.0",
+      "language": {
+        "name": "TAC",
+        "language_version": "0.5",
+        "compiler_version": "0.5.0",
+        "ir_version": "1.2"
+      },
+      "requires": "0.5",
+      "schedules": [
+        {
+          "cron": "0 3 * * *",
+          "tz": "Europe/Lisbon"
+        }
+      ],
+      "nodes": [
+        {
+          "id": "n0",
+          "name": "exp",
+          "skill": "laya.dataset.export",
+          "args": {
+            "task": "acao"
+          },
+          "pos": {
+            "line": 11,
+            "col": 7
+          }
+        },
+        {
+          "id": "n1",
+          "name": "train",
+          "skill": "laya.train",
+          "args": {
+            "dataset": {
+              "ref": "exp.path"
+            },
+            "model": "estoque"
+          },
+          "pos": {
+            "line": 12,
+            "col": 7
+          }
+        }
+      ],
+      "edges": [
+        {
+          "from": "n0",
+          "to": "n1"
+        }
+      ],
+      "manifest": {
+        "name": "estoque_treino",
+        "version": "1.0",
+        "skills": [
+          {
+            "skill": "laya.dataset.export",
+            "node": "exp"
+          },
+          {
+            "skill": "laya.train",
+            "node": "train"
+          }
+        ],
+        "node_count": 2,
+        "edge_count": 1
+      }
+    },
+    {
+      "flow_id": "",
+      "name": "estoque_promover",
+      "version": "1.0",
+      "language": {
+        "name": "TAC",
+        "language_version": "0.5",
+        "compiler_version": "0.5.0",
+        "ir_version": "1.2"
+      },
+      "requires": "0.5",
+      "nodes": [
+        {
+          "id": "n0",
+          "name": "ev",
+          "skill": "laya.eval",
+          "args": {
+            "model": "estoque",
+            "run": {
+              "ref": "payload.run"
+            }
+          },
+          "pos": {
+            "line": 18,
+            "col": 7
+          }
+        },
+        {
+          "id": "n1",
+          "name": "prom",
+          "skill": "laya.model.promote",
+          "args": {
+            "if_better": true,
+            "max_drop_pp": 1,
+            "model": "estoque",
+            "run": {
+              "ref": "payload.run"
+            }
+          },
+          "pos": {
+            "line": 19,
+            "col": 7
+          }
+        }
+      ],
+      "edges": [
+        {
+          "from": "n0",
+          "to": "n1"
+        }
+      ],
+      "triggers": [
+        {
+          "event": "laya.train.completed",
+          "targets": [
+            "n0"
+          ]
+        }
+      ],
+      "manifest": {
+        "name": "estoque_promover",
+        "version": "1.0",
+        "skills": [
+          {
+            "skill": "laya.eval",
+            "node": "ev"
+          },
+          {
+            "skill": "laya.model.promote",
+            "node": "prom"
+          }
+        ],
+        "node_count": 2,
+        "edge_count": 1
+      }
+    }
+  ],
+  "tasks": [],
+  "models": [
+    {
+      "name": "estoque",
+      "tasks": [
+        "acao"
+      ],
+      "base": "laya-multilingual"
+    }
+  ],
+  "episodes": [],
+  "datasets": []
+}

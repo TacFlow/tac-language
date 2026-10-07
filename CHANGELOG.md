@@ -2,6 +2,61 @@
 
 All notable changes to the TAC Language will be documented in this file.
 
+## [v0.5.0] — 2026-10-06
+
+### ✨ LAYA in TAC
+
+- `requires "0.5"`; declarations `task`, `model`, `episode`, `dataset` (DESIGN of the LAYA mission, §5).
+- Gates: `gate[branch] -> node` after a `laya.decide` node — labels, `"strings"`, `true`/`false`, `*`, ranges `[<10]`, `[10..50]`, `[>=50]`, `[<-5]`; pseudo-labels `low_confidence`, `error`.
+- `schedule "<cron>" tz "<IANA>"` (repeatable) on flows.
+- 13 `laya.*` skills in the standard library (`skills.json` lists them).
+- Diagnostics TAC-LAYA-001…014, 016, 017, TAC-PARSE-001 (a form the parser skipped — no longer silent), TAC-VER-001, TAC-EVT-002, TAC-SCHED-001/002, TAC-TYPE-001. TAC-LAYA-015 (gate or labelled edge in a lateral position) is dialect-only: this compiler has no lateral edges (`~>`). TAC-LAYA-016 also covers `else:` on a labelled edge (the fallback leaves the gate without a label).
+- Also errors (no code): a number literal that overflows a float64 (`1e999`); `requires` that is not a dotted version (`"banana"`) or that appears twice. A range branch that is empty or inverted (`[5..5]`, `[50..10]`) or has a non-finite bound is TAC-LAYA-002 and says so.
+- Warning (no code): an argument given more than once (`s(q: 1, q: 2)`, `s(q: 1) { q: 2 }`, `s("q", arg0: "r")`) — the last value in the source wins, as before; a warning, not an error, so v0.4 sources that do this still compile to the same IR.
+- IR 1.2: edge `label`/`range`, flow `requires` (stamped automatically) and `schedules`. `tac compile --json` prints the whole program; `tac episode` prints a declared episode; `--tasks <file>` gives the analyzer a task registry.
+- Lexer: `*`, `..`, negative number literals, scientific notation (`1e3`, `2.5E-4`).
+
+### 🔧 Fixes (the only differences on v0.4 sources — `compat_test.go`)
+
+1. `language` block: `language_version` 0.5, `ir_version` 1.2 (`compiler_version` is `0.5.0`).
+2. Skill arguments keep their values: `web_search(query: q)` is `{"query": {"ref": "q"}}`, not `{"arg0": "query"}`. Numeric values are written as their literal (`json.Number`): `1.50` stays `1.50`, `1e3` stays `1e3`, nothing above 2^53 loses precision; leading zeros, which JSON forbids, are dropped (`007` is `7`, as v0.4 read it).
+3. Chained edges `a -> b -> c` keep every hop.
+4. An input type that is neither a trust type nor a value type warns (TAC-TYPE-001), as SPEC §5.2 rule 3 requires.
+5. `else:` targets are reachable (no TAC-GRAPH-003).
+
+Also: an array literal the parser cannot read no longer hangs it; `tac fmt` keeps the bodies of block nodes (`if`/`else`/`for each`), quotes object keys that are not identifiers, and is idempotent on every example; scientific notation (`1e3`, `2.5E-4`) is one number, and any other text glued to a number (`3x`, `2.5kg`) is still read as in v0.4 but warns TAC-PARSE-001 naming it; forms the parser skips (also inside declarations and `context` blocks) are reported as TAC-PARSE-001, and the parser resumes exactly where v0.4 did (`step: a -> b` keeps its edge; `testdata/compat/recovery/` holds v0.4.0's own output for such sources).
+
+### ⚠️ Behaviour changes
+
+- **`tac fmt` refuses** a source with text the parser could not read (TAC-PARSE-001: an unrecognised form or a number glued to text): it prints the diagnostics to stderr, writes nothing to stdout and exits 1, instead of printing the source without that text.
+- **Nesting limit:** values (`[`, `{`) and statement blocks nest at most `parser.MaxDepth` (512) levels; deeper is a parse error (before, a deep enough source overflowed the stack).
+- `tac episode` honours `--registry`, `--mode` and `--tasks`, like `tac compile`.
+
+For library users (Go API):
+
+- `compiler.FlowNode.Args` holds the argument **values**; a bare identifier is `{"ref": "<name>"}`; numbers are `json.Number`, not `float64`.
+- The AST has `NodeUnrecognized` (a skipped form, Value = its first token) and `NodeGluedNumber` (`3x`, at the column where the number starts) nodes, in `Program.Nodes`, `Flow.Children`, `ContextBlock.Children` and declaration `Children`.
+- A chained edge `a -> b -> c` is N edges in `Flow.Edges` (was one).
+- Labelled edges store their branch in `Edge.Attrs[ast.LabelAttr]`.
+
+### 📄 Also
+
+- `SPEC.md` gains §14 "LAYA — Decision Tasks (v0.5)" (declarations, gates, schedules and events, the `laya.*` skills, the diagnostics table, IR 1.2, conformance); the table of contents and §12.3 point to it.
+- `README.md`: LAYA section, the six `examples/laya_*.tac`, and the new CLI commands.
+- Six dialect-neutral examples: `examples/laya_gate.tac`, `laya_event_trigger.tac`, `laya_episode.tac`, `laya_dataset.tac`, `laya_normalize.tac`, `laya_training_loop.tac`.
+- `conformance/laya/`: 33 cases shared with the TacFlow platform dialect (`client-app/api/pkg/tac`), hash-pinned there.
+- `version` → `0.5.0`, `langVersion` → `0.5`, `irVersion` → `1.2` (the emitted IR changed: edges gain `label`/`range`, flows gain `requires`/`schedules`). The version constants live in `compiler/version.go`.
+
+### 🧩 New Go API
+
+- `compiler`: `CompileProgramIR`, `ProgramIR` (flows plus tasks, models, episodes, datasets — it does **not** run semantic analysis; run `semantic` first), `RangeIR`, `ScheduleIR`, `FlowEdge.Label`/`Range`, `FlowJSON.Requires`/`Schedules`; version constants `LanguageVersion`, `CompilerVersion`, `IRVersion`, `LayaLanguage`.
+- `semantic`: `(*Analyzer).SetTasks`, `ValidateCron`, `ValidateTZ`, `LayaSkills`, `SupportedLanguage`.
+- `laya` (new package): the LAYA data types (`Task`, `Question`, `Model`, `Episode`, `Dataset`), `…FromAST`, `ValidateEpisode`/`ValidateQuestion`, labels and ranges (`TaskLabels`, `PseudoLabels`, `ParseRangeLabel`, `CheckRangeLabel`, `Overlap`), `Canonical`.
+- `ast`: `EdgeLabel`, `LabelString`, `LabelAttr`, `LabelLowConfidence`/`LabelError`/`LabelAny`, `JSONNumber`, and the v0.5 node types.
+- `lexer`: `Glued` / `(*Lexer).Glued`, tokens `Star`, `DotDot`.
+- `parser`: `MaxDepth`.
+- `types`: `ValueTypes`, `IsValueType`.
+
 ## [v0.4.0] — 2026-09-02
 
 ### ✨ Value Types on Declared Inputs
